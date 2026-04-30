@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /store/{key} {
+      // Anyone can read all store documents (needed for shared leagues/results)
+      allow read: always;
+      // Anyone can write — app-level auth handles access control
+      // Tighten these rules before going fully public if needed
+      allow write: always;
+    }
+  }
+}
