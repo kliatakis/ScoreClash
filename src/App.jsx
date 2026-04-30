@@ -2460,7 +2460,7 @@ export default function App() {
       <style>{css(darkMode)}</style>
       <div className="app">
         <header className="header">
-          <div className="logo">SCORE<span>CLASH</span></div>
+          <div className="logo" style={{ cursor: "pointer" }} onClick={() => setTab("dashboard")}>SCORE<span>CLASH</span></div>
           <div className="header-user">
             <ProfileDropdown user={user} onLogout={handleLogout} onUpdate={handleProfileUpdate} darkMode={darkMode} onToggleDark={toggleDark} />
           </div>
