@@ -2167,6 +2167,7 @@ function ProfileDropdown({ user, onLogout, onUpdate, darkMode, onToggleDark }) {
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [newUsername, setNewUsername] = useState(user.username);
   const [saved, setSaved] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const dropRef = useRef(null);
   const fileRef = useRef(null);
 
@@ -2198,7 +2199,6 @@ function ProfileDropdown({ user, onLogout, onUpdate, darkMode, onToggleDark }) {
     const allUsers = storage.get("sc_users") || {};
     const trimmed = newUsername.trim();
     if (trimmed && trimmed !== user.username) {
-      // Check uniqueness
       const taken = Object.values(allUsers).find(u => u.uid !== user.uid && u.username.toLowerCase() === trimmed.toLowerCase());
       if (taken) { alert("Username already taken."); return; }
       allUsers[user.uid].username = trimmed;
@@ -2211,10 +2211,63 @@ function ProfileDropdown({ user, onLogout, onUpdate, darkMode, onToggleDark }) {
     setSelectedAvatar(null);
   };
 
+  const handleDeleteAccount = async () => {
+    const allUsers = storage.get("sc_users") || {};
+    const allLeagues = storage.get("sc_leagues") || {};
+    const allPredictions = storage.get("sc_predictions") || {};
+
+    // 1 — Handle leagues: transfer admin or remove membership
+    Object.values(allLeagues).forEach(league => {
+      if (!league.members.includes(user.uid)) return;
+
+      if (league.adminId === user.uid) {
+        // Transfer admin to next member, or delete league if sole member
+        const remaining = league.members.filter(m => m !== user.uid);
+        if (remaining.length === 0) {
+          delete allLeagues[league.id];
+        } else {
+          league.adminId = remaining[0];
+          league.members = remaining;
+        }
+      } else {
+        league.members = league.members.filter(m => m !== user.uid);
+        if (league.members.length === 0) delete allLeagues[league.id];
+      }
+    });
+
+    // 2 — Delete predictions
+    delete allPredictions[user.uid];
+
+    // 3 — Delete user
+    delete allUsers[user.uid];
+
+    // 4 — Persist all changes to Firestore
+    await storage.set("sc_users", allUsers);
+    await storage.set("sc_leagues", allLeagues);
+    await storage.set("sc_predictions", allPredictions);
+
+    // 5 — Log out
+    setShowDeleteConfirm(false);
+    setOpen(false);
+    onLogout();
+  };
+
   const initials = user.username.slice(0, 2).toUpperCase();
 
   return (
     <div style={{ position: "relative" }} ref={dropRef}>
+      {/* Delete account confirm modal */}
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="Delete Account"
+          message={`Are you sure you want to permanently delete your account "${user.username}"? All your predictions will be deleted. If you admin any leagues, admin will be transferred to the next member. This cannot be undone.`}
+          confirmLabel="Delete My Account"
+          danger={true}
+          onConfirm={handleDeleteAccount}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
+
       <button className={`profile-btn ${open ? "open" : ""}`} onClick={() => setOpen(o => !o)}>
         <Avatar uid={user.uid} size={28} username={user.username} />
         <span>{user.username}</span>
@@ -2271,7 +2324,7 @@ function ProfileDropdown({ user, onLogout, onUpdate, darkMode, onToggleDark }) {
           </div>
 
           {/* Theme toggle */}
-          <div className="profile-dd-section" style={{ borderBottom: "none" }}>
+          <div className="profile-dd-section">
             <div className="toggle-row" style={{ padding: 0, border: "none" }}>
               <div className="toggle-info">
                 <strong style={{ fontSize: 13 }}>{darkMode ? "🌙 Dark Mode" : "☀️ Light Mode"}</strong>
@@ -2281,10 +2334,21 @@ function ProfileDropdown({ user, onLogout, onUpdate, darkMode, onToggleDark }) {
             </div>
           </div>
 
-          {/* Sign out */}
-          <div style={{ padding: "12px 16px 14px" }}>
+          {/* Sign out + Delete account */}
+          <div style={{ padding: "12px 16px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
             <button className="btn-profile-signout" style={{ width: "100%", margin: 0 }} onClick={() => { setOpen(false); onLogout(); }}>
               Sign out
+            </button>
+            <button
+              style={{
+                width: "100%", background: "none", border: "none",
+                color: "var(--muted)", fontSize: 11, cursor: "pointer",
+                padding: "4px 0", textDecoration: "underline",
+                fontFamily: "var(--font-body)",
+              }}
+              onClick={() => { setOpen(false); setShowDeleteConfirm(true); }}
+            >
+              Delete account
             </button>
           </div>
         </div>
