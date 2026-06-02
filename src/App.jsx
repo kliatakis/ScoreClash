@@ -1398,6 +1398,8 @@ function PredictionsTab({ user, leagueId, refresh }) {
     const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
     return <span className={`lock-badge ${closingSoon ? "closing-soon" : "open"}`} style={{ marginLeft: 8 }}>🔓 Locks in {timeStr}</span>;
   };
+
+  const savePred = (fixtureId, homeGoals, awayGoals) => {
     const all = storage.get("sc_predictions") || {};
     if (!all[user.uid]) all[user.uid] = {};
     if (!all[user.uid][leagueId]) all[user.uid][leagueId] = {};
