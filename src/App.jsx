@@ -19,110 +19,110 @@ const WC2026_GROUPS = {
 };
 
 const WC2026_FIXTURES = [
-  { id: "gs1", group: "A", home: "Mexico", away: "South Africa", date: "2026-06-11", time: "15:00 ET", stage: "Group Stage", venue: "Mexico City" },
-  { id: "gs2", group: "A", home: "Korea Republic", away: "Czechia", date: "2026-06-11", time: "22:00 ET", stage: "Group Stage", venue: "Guadalajara" },
-  { id: "gs3", group: "B", home: "Canada", away: "Bosnia and Herzegovina", date: "2026-06-12", time: "15:00 ET", stage: "Group Stage", venue: "Toronto" },
-  { id: "gs4", group: "D", home: "United States", away: "Paraguay", date: "2026-06-12", time: "21:00 ET", stage: "Group Stage", venue: "Inglewood" },
-  { id: "gs5", group: "B", home: "Qatar", away: "Switzerland", date: "2026-06-13", time: "15:00 ET", stage: "Group Stage", venue: "Santa Clara" },
-  { id: "gs6", group: "C", home: "Brazil", away: "Morocco", date: "2026-06-13", time: "18:00 ET", stage: "Group Stage", venue: "East Rutherford" },
-  { id: "gs7", group: "C", home: "Haiti", away: "Scotland", date: "2026-06-13", time: "21:00 ET", stage: "Group Stage", venue: "Foxborough" },
-  { id: "gs8", group: "D", home: "Australia", away: "Türkiye", date: "2026-06-14", time: "00:00 ET", stage: "Group Stage", venue: "Vancouver" },
-  { id: "gs9", group: "E", home: "Germany", away: "Curaçao", date: "2026-06-14", time: "13:00 ET", stage: "Group Stage", venue: "Houston" },
-  { id: "gs10", group: "F", home: "Netherlands", away: "Japan", date: "2026-06-14", time: "16:00 ET", stage: "Group Stage", venue: "Arlington" },
-  { id: "gs11", group: "E", home: "Ivory Coast", away: "Ecuador", date: "2026-06-14", time: "19:00 ET", stage: "Group Stage", venue: "Philadelphia" },
-  { id: "gs12", group: "F", home: "Sweden", away: "Tunisia", date: "2026-06-14", time: "22:00 ET", stage: "Group Stage", venue: "Monterrey" },
-  { id: "gs13", group: "H", home: "Spain", away: "Cape Verde", date: "2026-06-15", time: "13:00 ET", stage: "Group Stage", venue: "Atlanta" },
-  { id: "gs14", group: "G", home: "Belgium", away: "Egypt", date: "2026-06-15", time: "18:00 ET", stage: "Group Stage", venue: "Seattle" },
-  { id: "gs15", group: "H", home: "Saudi Arabia", away: "Uruguay", date: "2026-06-15", time: "18:00 ET", stage: "Group Stage", venue: "Miami Gardens" },
-  { id: "gs16", group: "G", home: "Iran", away: "New Zealand", date: "2026-06-16", time: "00:00 ET", stage: "Group Stage", venue: "Inglewood" },
-  { id: "gs17", group: "I", home: "France", away: "Senegal", date: "2026-06-16", time: "15:00 ET", stage: "Group Stage", venue: "East Rutherford" },
-  { id: "gs18", group: "I", home: "Iraq", away: "Norway", date: "2026-06-16", time: "18:00 ET", stage: "Group Stage", venue: "Foxborough" },
-  { id: "gs19", group: "J", home: "Argentina", away: "Algeria", date: "2026-06-16", time: "21:00 ET", stage: "Group Stage", venue: "Kansas City" },
-  { id: "gs20", group: "J", home: "Austria", away: "Jordan", date: "2026-06-17", time: "00:00 ET", stage: "Group Stage", venue: "Santa Clara" },
-  { id: "gs21", group: "K", home: "Portugal", away: "DR Congo", date: "2026-06-17", time: "13:00 ET", stage: "Group Stage", venue: "Houston" },
-  { id: "gs22", group: "L", home: "England", away: "Croatia", date: "2026-06-17", time: "16:00 ET", stage: "Group Stage", venue: "Arlington" },
-  { id: "gs23", group: "L", home: "Ghana", away: "Panama", date: "2026-06-17", time: "19:00 ET", stage: "Group Stage", venue: "Toronto" },
-  { id: "gs24", group: "K", home: "Uzbekistan", away: "Colombia", date: "2026-06-17", time: "22:00 ET", stage: "Group Stage", venue: "Mexico City" },
-  { id: "gs25", group: "A", home: "Czechia", away: "South Africa", date: "2026-06-18", time: "12:00 ET", stage: "Group Stage", venue: "Atlanta" },
-  { id: "gs26", group: "B", home: "Switzerland", away: "Bosnia and Herzegovina", date: "2026-06-18", time: "15:00 ET", stage: "Group Stage", venue: "Inglewood" },
-  { id: "gs27", group: "B", home: "Canada", away: "Qatar", date: "2026-06-18", time: "18:00 ET", stage: "Group Stage", venue: "Vancouver" },
-  { id: "gs28", group: "A", home: "Mexico", away: "Korea Republic", date: "2026-06-18", time: "23:00 ET", stage: "Group Stage", venue: "Guadalajara" },
-  { id: "gs29", group: "D", home: "United States", away: "Australia", date: "2026-06-19", time: "15:00 ET", stage: "Group Stage", venue: "Seattle" },
-  { id: "gs30", group: "C", home: "Scotland", away: "Morocco", date: "2026-06-19", time: "18:00 ET", stage: "Group Stage", venue: "Foxborough" },
-  { id: "gs31", group: "C", home: "Brazil", away: "Haiti", date: "2026-06-19", time: "21:00 ET", stage: "Group Stage", venue: "Philadelphia" },
-  { id: "gs32", group: "D", home: "Türkiye", away: "Paraguay", date: "2026-06-20", time: "00:00 ET", stage: "Group Stage", venue: "Santa Clara" },
-  { id: "gs33", group: "F", home: "Netherlands", away: "Sweden", date: "2026-06-20", time: "13:00 ET", stage: "Group Stage", venue: "Houston" },
-  { id: "gs34", group: "E", home: "Germany", away: "Ivory Coast", date: "2026-06-20", time: "16:00 ET", stage: "Group Stage", venue: "Toronto" },
-  { id: "gs35", group: "E", home: "Ecuador", away: "Curaçao", date: "2026-06-20", time: "20:00 ET", stage: "Group Stage", venue: "Kansas City" },
-  { id: "gs36", group: "F", home: "Tunisia", away: "Japan", date: "2026-06-21", time: "00:00 ET", stage: "Group Stage", venue: "Monterrey" },
-  { id: "gs37", group: "H", home: "Spain", away: "Saudi Arabia", date: "2026-06-21", time: "12:00 ET", stage: "Group Stage", venue: "Atlanta" },
-  { id: "gs38", group: "G", home: "Belgium", away: "Iran", date: "2026-06-21", time: "15:00 ET", stage: "Group Stage", venue: "Inglewood" },
-  { id: "gs39", group: "H", home: "Uruguay", away: "Cape Verde", date: "2026-06-21", time: "18:00 ET", stage: "Group Stage", venue: "Miami Gardens" },
-  { id: "gs40", group: "G", home: "New Zealand", away: "Egypt", date: "2026-06-21", time: "21:00 ET", stage: "Group Stage", venue: "Vancouver" },
-  { id: "gs41", group: "J", home: "Argentina", away: "Austria", date: "2026-06-22", time: "13:00 ET", stage: "Group Stage", venue: "Arlington" },
-  { id: "gs42", group: "I", home: "France", away: "Iraq", date: "2026-06-22", time: "17:00 ET", stage: "Group Stage", venue: "Philadelphia" },
-  { id: "gs43", group: "I", home: "Norway", away: "Senegal", date: "2026-06-22", time: "20:00 ET", stage: "Group Stage", venue: "East Rutherford" },
-  { id: "gs44", group: "J", home: "Jordan", away: "Algeria", date: "2026-06-22", time: "23:00 ET", stage: "Group Stage", venue: "Santa Clara" },
-  { id: "gs45", group: "K", home: "Portugal", away: "Uzbekistan", date: "2026-06-23", time: "13:00 ET", stage: "Group Stage", venue: "Houston" },
-  { id: "gs46", group: "L", home: "England", away: "Ghana", date: "2026-06-23", time: "16:00 ET", stage: "Group Stage", venue: "Foxborough" },
-  { id: "gs47", group: "L", home: "Panama", away: "Croatia", date: "2026-06-23", time: "19:00 ET", stage: "Group Stage", venue: "Toronto" },
-  { id: "gs48", group: "K", home: "Colombia", away: "DR Congo", date: "2026-06-23", time: "22:00 ET", stage: "Group Stage", venue: "Guadalajara" },
-  { id: "gs49", group: "B", home: "Switzerland", away: "Canada", date: "2026-06-24", time: "15:00 ET", stage: "Group Stage", venue: "Vancouver" },
-  { id: "gs50", group: "B", home: "Bosnia and Herzegovina", away: "Qatar", date: "2026-06-24", time: "15:00 ET", stage: "Group Stage", venue: "Seattle" },
-  { id: "gs51", group: "C", home: "Scotland", away: "Brazil", date: "2026-06-24", time: "18:00 ET", stage: "Group Stage", venue: "Miami" },
-  { id: "gs52", group: "C", home: "Morocco", away: "Haiti", date: "2026-06-24", time: "18:00 ET", stage: "Group Stage", venue: "Atlanta" },
-  { id: "gs53", group: "A", home: "Czechia", away: "Mexico", date: "2026-06-24", time: "21:00 ET", stage: "Group Stage", venue: "Mexico City" },
-  { id: "gs54", group: "A", home: "South Africa", away: "Korea Republic", date: "2026-06-24", time: "21:00 ET", stage: "Group Stage", venue: "Monterrey" },
-  { id: "gs55", group: "E", home: "Ecuador", away: "Germany", date: "2026-06-25", time: "16:00 ET", stage: "Group Stage", venue: "East Rutherford" },
-  { id: "gs56", group: "E", home: "Curaçao", away: "Ivory Coast", date: "2026-06-25", time: "16:00 ET", stage: "Group Stage", venue: "Philadelphia" },
-  { id: "gs57", group: "F", home: "Japan", away: "Sweden", date: "2026-06-25", time: "19:00 ET", stage: "Group Stage", venue: "Arlington" },
-  { id: "gs58", group: "F", home: "Tunisia", away: "Netherlands", date: "2026-06-25", time: "19:00 ET", stage: "Group Stage", venue: "Kansas City" },
-  { id: "gs59", group: "D", home: "Türkiye", away: "United States", date: "2026-06-25", time: "22:00 ET", stage: "Group Stage", venue: "Inglewood" },
-  { id: "gs60", group: "D", home: "Paraguay", away: "Australia", date: "2026-06-25", time: "22:00 ET", stage: "Group Stage", venue: "Santa Clara" },
-  { id: "gs61", group: "I", home: "Norway", away: "France", date: "2026-06-26", time: "15:00 ET", stage: "Group Stage", venue: "Foxborough" },
-  { id: "gs62", group: "I", home: "Senegal", away: "Iraq", date: "2026-06-26", time: "15:00 ET", stage: "Group Stage", venue: "Toronto" },
-  { id: "gs63", group: "H", home: "Cape Verde", away: "Saudi Arabia", date: "2026-06-26", time: "20:00 ET", stage: "Group Stage", venue: "Houston" },
-  { id: "gs64", group: "H", home: "Uruguay", away: "Spain", date: "2026-06-26", time: "20:00 ET", stage: "Group Stage", venue: "Guadalajara" },
-  { id: "gs65", group: "G", home: "Egypt", away: "Iran", date: "2026-06-26", time: "23:00 ET", stage: "Group Stage", venue: "Seattle" },
-  { id: "gs66", group: "G", home: "New Zealand", away: "Belgium", date: "2026-06-26", time: "23:00 ET", stage: "Group Stage", venue: "Vancouver" },
-  { id: "gs67", group: "L", home: "Panama", away: "England", date: "2026-06-27", time: "17:00 ET", stage: "Group Stage", venue: "East Rutherford" },
-  { id: "gs68", group: "L", home: "Croatia", away: "Ghana", date: "2026-06-27", time: "17:00 ET", stage: "Group Stage", venue: "Philadelphia" },
-  { id: "gs69", group: "K", home: "Colombia", away: "Portugal", date: "2026-06-27", time: "19:30 ET", stage: "Group Stage", venue: "Miami" },
-  { id: "gs70", group: "K", home: "DR Congo", away: "Uzbekistan", date: "2026-06-27", time: "19:30 ET", stage: "Group Stage", venue: "Atlanta" },
-  { id: "gs71", group: "J", home: "Algeria", away: "Austria", date: "2026-06-27", time: "22:00 ET", stage: "Group Stage", venue: "Kansas City" },
-  { id: "gs72", group: "J", home: "Jordan", away: "Argentina", date: "2026-06-27", time: "22:00 ET", stage: "Group Stage", venue: "Arlington" },
-  { id: "r32_1", home: "TBD (A2)", away: "TBD (B2)", date: "2026-06-28", time: "15:00 ET", stage: "Round of 32", venue: "Inglewood" },
-  { id: "r32_2", home: "TBD (C1)", away: "TBD (F2)", date: "2026-06-29", time: "13:00 ET", stage: "Round of 32", venue: "Houston" },
-  { id: "r32_3", home: "TBD (E1)", away: "TBD (3rd)", date: "2026-06-29", time: "16:30 ET", stage: "Round of 32", venue: "Foxborough" },
-  { id: "r32_4", home: "TBD (F1)", away: "TBD (C2)", date: "2026-06-29", time: "21:00 ET", stage: "Round of 32", venue: "Guadalajara" },
-  { id: "r32_5", home: "TBD (E2)", away: "TBD (I2)", date: "2026-06-30", time: "13:00 ET", stage: "Round of 32", venue: "Arlington" },
-  { id: "r32_6", home: "TBD (I1)", away: "TBD (3rd)", date: "2026-06-30", time: "17:00 ET", stage: "Round of 32", venue: "East Rutherford" },
-  { id: "r32_7", home: "TBD (A1)", away: "TBD (3rd)", date: "2026-06-30", time: "21:00 ET", stage: "Round of 32", venue: "Mexico City" },
-  { id: "r32_8", home: "TBD (L1)", away: "TBD (3rd)", date: "2026-07-01", time: "12:00 ET", stage: "Round of 32", venue: "Atlanta" },
-  { id: "r32_9", home: "TBD (G1)", away: "TBD (3rd)", date: "2026-07-01", time: "16:00 ET", stage: "Round of 32", venue: "Seattle" },
-  { id: "r32_10", home: "TBD (D1)", away: "TBD (3rd)", date: "2026-07-01", time: "20:00 ET", stage: "Round of 32", venue: "Santa Clara" },
-  { id: "r32_11", home: "TBD (H1)", away: "TBD (J2)", date: "2026-07-02", time: "15:00 ET", stage: "Round of 32", venue: "Inglewood" },
-  { id: "r32_12", home: "TBD (K2)", away: "TBD (L2)", date: "2026-07-02", time: "19:00 ET", stage: "Round of 32", venue: "Toronto" },
-  { id: "r32_13", home: "TBD (B1)", away: "TBD (3rd)", date: "2026-07-02", time: "23:00 ET", stage: "Round of 32", venue: "Vancouver" },
-  { id: "r32_14", home: "TBD (D2)", away: "TBD (G2)", date: "2026-07-03", time: "14:00 ET", stage: "Round of 32", venue: "Arlington" },
-  { id: "r32_15", home: "TBD (J1)", away: "TBD (H2)", date: "2026-07-03", time: "18:00 ET", stage: "Round of 32", venue: "Miami" },
-  { id: "r32_16", home: "TBD (K1)", away: "TBD (3rd)", date: "2026-07-03", time: "21:30 ET", stage: "Round of 32", venue: "Kansas City" },
-  { id: "r16_1", home: "TBD", away: "TBD", date: "2026-07-04", time: "13:00 ET", stage: "Round of 16", venue: "Houston" },
-  { id: "r16_2", home: "TBD", away: "TBD", date: "2026-07-04", time: "17:00 ET", stage: "Round of 16", venue: "Philadelphia" },
-  { id: "r16_3", home: "TBD", away: "TBD", date: "2026-07-05", time: "16:00 ET", stage: "Round of 16", venue: "East Rutherford" },
-  { id: "r16_4", home: "TBD", away: "TBD", date: "2026-07-05", time: "20:00 ET", stage: "Round of 16", venue: "Mexico City" },
-  { id: "r16_5", home: "TBD", away: "TBD", date: "2026-07-06", time: "15:00 ET", stage: "Round of 16", venue: "Arlington" },
-  { id: "r16_6", home: "TBD", away: "TBD", date: "2026-07-06", time: "17:00 ET", stage: "Round of 16", venue: "Seattle" },
-  { id: "r16_7", home: "TBD", away: "TBD", date: "2026-07-07", time: "12:00 ET", stage: "Round of 16", venue: "Atlanta" },
-  { id: "r16_8", home: "TBD", away: "TBD", date: "2026-07-07", time: "16:00 ET", stage: "Round of 16", venue: "Vancouver" },
-  { id: "qf1", home: "TBD", away: "TBD", date: "2026-07-09", time: "16:00 ET", stage: "Quarterfinal", venue: "Foxborough" },
-  { id: "qf2", home: "TBD", away: "TBD", date: "2026-07-10", time: "15:00 ET", stage: "Quarterfinal", venue: "Inglewood" },
-  { id: "qf3", home: "TBD", away: "TBD", date: "2026-07-11", time: "17:00 ET", stage: "Quarterfinal", venue: "Miami Gardens" },
-  { id: "qf4", home: "TBD", away: "TBD", date: "2026-07-11", time: "21:00 ET", stage: "Quarterfinal", venue: "Kansas City" },
-  { id: "sf1", home: "TBD", away: "TBD", date: "2026-07-14", time: "15:00 ET", stage: "Semifinal", venue: "Arlington" },
-  { id: "sf2", home: "TBD", away: "TBD", date: "2026-07-15", time: "15:00 ET", stage: "Semifinal", venue: "Atlanta" },
-  { id: "3p", home: "TBD", away: "TBD", date: "2026-07-18", time: "17:00 ET", stage: "Third Place", venue: "Miami Gardens" },
-  { id: "final", home: "TBD", away: "TBD", date: "2026-07-19", time: "15:00 ET", stage: "Final", venue: "East Rutherford" },
+  { id: "gs1", group: "A", home: "Mexico", away: "South Africa", date: "2026-06-11", time: "22:00 EEST", stage: "Group Stage", venue: "Mexico City" },
+  { id: "gs2", group: "A", home: "Korea Republic", away: "Czechia", date: "2026-06-11", time: "05:00 EEST", stage: "Group Stage", venue: "Guadalajara" },
+  { id: "gs3", group: "B", home: "Canada", away: "Bosnia and Herzegovina", date: "2026-06-12", time: "22:00 EEST", stage: "Group Stage", venue: "Toronto" },
+  { id: "gs4", group: "D", home: "United States", away: "Paraguay", date: "2026-06-12", time: "04:00 EEST", stage: "Group Stage", venue: "Inglewood" },
+  { id: "gs5", group: "B", home: "Qatar", away: "Switzerland", date: "2026-06-13", time: "22:00 EEST", stage: "Group Stage", venue: "Santa Clara" },
+  { id: "gs6", group: "C", home: "Brazil", away: "Morocco", date: "2026-06-13", time: "01:00 EEST", stage: "Group Stage", venue: "East Rutherford" },
+  { id: "gs7", group: "C", home: "Haiti", away: "Scotland", date: "2026-06-13", time: "04:00 EEST", stage: "Group Stage", venue: "Foxborough" },
+  { id: "gs8", group: "D", home: "Australia", away: "Türkiye", date: "2026-06-14", time: "07:00 EEST", stage: "Group Stage", venue: "Vancouver" },
+  { id: "gs9", group: "E", home: "Germany", away: "Curaçao", date: "2026-06-14", time: "20:00 EEST", stage: "Group Stage", venue: "Houston" },
+  { id: "gs10", group: "F", home: "Netherlands", away: "Japan", date: "2026-06-14", time: "23:00 EEST", stage: "Group Stage", venue: "Arlington" },
+  { id: "gs11", group: "E", home: "Ivory Coast", away: "Ecuador", date: "2026-06-14", time: "02:00 EEST", stage: "Group Stage", venue: "Philadelphia" },
+  { id: "gs12", group: "F", home: "Sweden", away: "Tunisia", date: "2026-06-14", time: "05:00 EEST", stage: "Group Stage", venue: "Monterrey" },
+  { id: "gs13", group: "H", home: "Spain", away: "Cape Verde", date: "2026-06-15", time: "20:00 EEST", stage: "Group Stage", venue: "Atlanta" },
+  { id: "gs14", group: "G", home: "Belgium", away: "Egypt", date: "2026-06-15", time: "01:00 EEST", stage: "Group Stage", venue: "Seattle" },
+  { id: "gs15", group: "H", home: "Saudi Arabia", away: "Uruguay", date: "2026-06-15", time: "01:00 EEST", stage: "Group Stage", venue: "Miami Gardens" },
+  { id: "gs16", group: "G", home: "Iran", away: "New Zealand", date: "2026-06-16", time: "07:00 EEST", stage: "Group Stage", venue: "Inglewood" },
+  { id: "gs17", group: "I", home: "France", away: "Senegal", date: "2026-06-16", time: "22:00 EEST", stage: "Group Stage", venue: "East Rutherford" },
+  { id: "gs18", group: "I", home: "Iraq", away: "Norway", date: "2026-06-16", time: "01:00 EEST", stage: "Group Stage", venue: "Foxborough" },
+  { id: "gs19", group: "J", home: "Argentina", away: "Algeria", date: "2026-06-16", time: "04:00 EEST", stage: "Group Stage", venue: "Kansas City" },
+  { id: "gs20", group: "J", home: "Austria", away: "Jordan", date: "2026-06-17", time: "07:00 EEST", stage: "Group Stage", venue: "Santa Clara" },
+  { id: "gs21", group: "K", home: "Portugal", away: "DR Congo", date: "2026-06-17", time: "20:00 EEST", stage: "Group Stage", venue: "Houston" },
+  { id: "gs22", group: "L", home: "England", away: "Croatia", date: "2026-06-17", time: "23:00 EEST", stage: "Group Stage", venue: "Arlington" },
+  { id: "gs23", group: "L", home: "Ghana", away: "Panama", date: "2026-06-17", time: "02:00 EEST", stage: "Group Stage", venue: "Toronto" },
+  { id: "gs24", group: "K", home: "Uzbekistan", away: "Colombia", date: "2026-06-17", time: "05:00 EEST", stage: "Group Stage", venue: "Mexico City" },
+  { id: "gs25", group: "A", home: "Czechia", away: "South Africa", date: "2026-06-18", time: "19:00 EEST", stage: "Group Stage", venue: "Atlanta" },
+  { id: "gs26", group: "B", home: "Switzerland", away: "Bosnia and Herzegovina", date: "2026-06-18", time: "22:00 EEST", stage: "Group Stage", venue: "Inglewood" },
+  { id: "gs27", group: "B", home: "Canada", away: "Qatar", date: "2026-06-18", time: "01:00 EEST", stage: "Group Stage", venue: "Vancouver" },
+  { id: "gs28", group: "A", home: "Mexico", away: "Korea Republic", date: "2026-06-18", time: "06:00 EEST", stage: "Group Stage", venue: "Guadalajara" },
+  { id: "gs29", group: "D", home: "United States", away: "Australia", date: "2026-06-19", time: "22:00 EEST", stage: "Group Stage", venue: "Seattle" },
+  { id: "gs30", group: "C", home: "Scotland", away: "Morocco", date: "2026-06-19", time: "01:00 EEST", stage: "Group Stage", venue: "Foxborough" },
+  { id: "gs31", group: "C", home: "Brazil", away: "Haiti", date: "2026-06-19", time: "04:00 EEST", stage: "Group Stage", venue: "Philadelphia" },
+  { id: "gs32", group: "D", home: "Türkiye", away: "Paraguay", date: "2026-06-20", time: "07:00 EEST", stage: "Group Stage", venue: "Santa Clara" },
+  { id: "gs33", group: "F", home: "Netherlands", away: "Sweden", date: "2026-06-20", time: "20:00 EEST", stage: "Group Stage", venue: "Houston" },
+  { id: "gs34", group: "E", home: "Germany", away: "Ivory Coast", date: "2026-06-20", time: "23:00 EEST", stage: "Group Stage", venue: "Toronto" },
+  { id: "gs35", group: "E", home: "Ecuador", away: "Curaçao", date: "2026-06-20", time: "03:00 EEST", stage: "Group Stage", venue: "Kansas City" },
+  { id: "gs36", group: "F", home: "Tunisia", away: "Japan", date: "2026-06-21", time: "07:00 EEST", stage: "Group Stage", venue: "Monterrey" },
+  { id: "gs37", group: "H", home: "Spain", away: "Saudi Arabia", date: "2026-06-21", time: "19:00 EEST", stage: "Group Stage", venue: "Atlanta" },
+  { id: "gs38", group: "G", home: "Belgium", away: "Iran", date: "2026-06-21", time: "22:00 EEST", stage: "Group Stage", venue: "Inglewood" },
+  { id: "gs39", group: "H", home: "Uruguay", away: "Cape Verde", date: "2026-06-21", time: "01:00 EEST", stage: "Group Stage", venue: "Miami Gardens" },
+  { id: "gs40", group: "G", home: "New Zealand", away: "Egypt", date: "2026-06-21", time: "04:00 EEST", stage: "Group Stage", venue: "Vancouver" },
+  { id: "gs41", group: "J", home: "Argentina", away: "Austria", date: "2026-06-22", time: "20:00 EEST", stage: "Group Stage", venue: "Arlington" },
+  { id: "gs42", group: "I", home: "France", away: "Iraq", date: "2026-06-22", time: "00:00 EEST", stage: "Group Stage", venue: "Philadelphia" },
+  { id: "gs43", group: "I", home: "Norway", away: "Senegal", date: "2026-06-22", time: "03:00 EEST", stage: "Group Stage", venue: "East Rutherford" },
+  { id: "gs44", group: "J", home: "Jordan", away: "Algeria", date: "2026-06-22", time: "06:00 EEST", stage: "Group Stage", venue: "Santa Clara" },
+  { id: "gs45", group: "K", home: "Portugal", away: "Uzbekistan", date: "2026-06-23", time: "20:00 EEST", stage: "Group Stage", venue: "Houston" },
+  { id: "gs46", group: "L", home: "England", away: "Ghana", date: "2026-06-23", time: "23:00 EEST", stage: "Group Stage", venue: "Foxborough" },
+  { id: "gs47", group: "L", home: "Panama", away: "Croatia", date: "2026-06-23", time: "02:00 EEST", stage: "Group Stage", venue: "Toronto" },
+  { id: "gs48", group: "K", home: "Colombia", away: "DR Congo", date: "2026-06-23", time: "05:00 EEST", stage: "Group Stage", venue: "Guadalajara" },
+  { id: "gs49", group: "B", home: "Switzerland", away: "Canada", date: "2026-06-24", time: "22:00 EEST", stage: "Group Stage", venue: "Vancouver" },
+  { id: "gs50", group: "B", home: "Bosnia and Herzegovina", away: "Qatar", date: "2026-06-24", time: "22:00 EEST", stage: "Group Stage", venue: "Seattle" },
+  { id: "gs51", group: "C", home: "Scotland", away: "Brazil", date: "2026-06-24", time: "01:00 EEST", stage: "Group Stage", venue: "Miami" },
+  { id: "gs52", group: "C", home: "Morocco", away: "Haiti", date: "2026-06-24", time: "01:00 EEST", stage: "Group Stage", venue: "Atlanta" },
+  { id: "gs53", group: "A", home: "Czechia", away: "Mexico", date: "2026-06-24", time: "04:00 EEST", stage: "Group Stage", venue: "Mexico City" },
+  { id: "gs54", group: "A", home: "South Africa", away: "Korea Republic", date: "2026-06-24", time: "04:00 EEST", stage: "Group Stage", venue: "Monterrey" },
+  { id: "gs55", group: "E", home: "Ecuador", away: "Germany", date: "2026-06-25", time: "23:00 EEST", stage: "Group Stage", venue: "East Rutherford" },
+  { id: "gs56", group: "E", home: "Curaçao", away: "Ivory Coast", date: "2026-06-25", time: "23:00 EEST", stage: "Group Stage", venue: "Philadelphia" },
+  { id: "gs57", group: "F", home: "Japan", away: "Sweden", date: "2026-06-25", time: "02:00 EEST", stage: "Group Stage", venue: "Arlington" },
+  { id: "gs58", group: "F", home: "Tunisia", away: "Netherlands", date: "2026-06-25", time: "02:00 EEST", stage: "Group Stage", venue: "Kansas City" },
+  { id: "gs59", group: "D", home: "Türkiye", away: "United States", date: "2026-06-25", time: "05:00 EEST", stage: "Group Stage", venue: "Inglewood" },
+  { id: "gs60", group: "D", home: "Paraguay", away: "Australia", date: "2026-06-25", time: "05:00 EEST", stage: "Group Stage", venue: "Santa Clara" },
+  { id: "gs61", group: "I", home: "Norway", away: "France", date: "2026-06-26", time: "22:00 EEST", stage: "Group Stage", venue: "Foxborough" },
+  { id: "gs62", group: "I", home: "Senegal", away: "Iraq", date: "2026-06-26", time: "22:00 EEST", stage: "Group Stage", venue: "Toronto" },
+  { id: "gs63", group: "H", home: "Cape Verde", away: "Saudi Arabia", date: "2026-06-26", time: "03:00 EEST", stage: "Group Stage", venue: "Houston" },
+  { id: "gs64", group: "H", home: "Uruguay", away: "Spain", date: "2026-06-26", time: "03:00 EEST", stage: "Group Stage", venue: "Guadalajara" },
+  { id: "gs65", group: "G", home: "Egypt", away: "Iran", date: "2026-06-26", time: "06:00 EEST", stage: "Group Stage", venue: "Seattle" },
+  { id: "gs66", group: "G", home: "New Zealand", away: "Belgium", date: "2026-06-26", time: "06:00 EEST", stage: "Group Stage", venue: "Vancouver" },
+  { id: "gs67", group: "L", home: "Panama", away: "England", date: "2026-06-27", time: "00:00 EEST", stage: "Group Stage", venue: "East Rutherford" },
+  { id: "gs68", group: "L", home: "Croatia", away: "Ghana", date: "2026-06-27", time: "00:00 EEST", stage: "Group Stage", venue: "Philadelphia" },
+  { id: "gs69", group: "K", home: "Colombia", away: "Portugal", date: "2026-06-27", time: "02:30 EEST", stage: "Group Stage", venue: "Miami" },
+  { id: "gs70", group: "K", home: "DR Congo", away: "Uzbekistan", date: "2026-06-27", time: "02:30 EEST", stage: "Group Stage", venue: "Atlanta" },
+  { id: "gs71", group: "J", home: "Algeria", away: "Austria", date: "2026-06-27", time: "05:00 EEST", stage: "Group Stage", venue: "Kansas City" },
+  { id: "gs72", group: "J", home: "Jordan", away: "Argentina", date: "2026-06-27", time: "05:00 EEST", stage: "Group Stage", venue: "Arlington" },
+  { id: "r32_1", home: "TBD (A2)", away: "TBD (B2)", date: "2026-06-28", time: "22:00 EEST", stage: "Round of 32", venue: "Inglewood" },
+  { id: "r32_2", home: "TBD (C1)", away: "TBD (F2)", date: "2026-06-29", time: "20:00 EEST", stage: "Round of 32", venue: "Houston" },
+  { id: "r32_3", home: "TBD (E1)", away: "TBD (3rd)", date: "2026-06-29", time: "23:30 EEST", stage: "Round of 32", venue: "Foxborough" },
+  { id: "r32_4", home: "TBD (F1)", away: "TBD (C2)", date: "2026-06-29", time: "04:00 EEST", stage: "Round of 32", venue: "Guadalajara" },
+  { id: "r32_5", home: "TBD (E2)", away: "TBD (I2)", date: "2026-06-30", time: "20:00 EEST", stage: "Round of 32", venue: "Arlington" },
+  { id: "r32_6", home: "TBD (I1)", away: "TBD (3rd)", date: "2026-06-30", time: "00:00 EEST", stage: "Round of 32", venue: "East Rutherford" },
+  { id: "r32_7", home: "TBD (A1)", away: "TBD (3rd)", date: "2026-06-30", time: "04:00 EEST", stage: "Round of 32", venue: "Mexico City" },
+  { id: "r32_8", home: "TBD (L1)", away: "TBD (3rd)", date: "2026-07-01", time: "19:00 EEST", stage: "Round of 32", venue: "Atlanta" },
+  { id: "r32_9", home: "TBD (G1)", away: "TBD (3rd)", date: "2026-07-01", time: "23:00 EEST", stage: "Round of 32", venue: "Seattle" },
+  { id: "r32_10", home: "TBD (D1)", away: "TBD (3rd)", date: "2026-07-01", time: "03:00 EEST", stage: "Round of 32", venue: "Santa Clara" },
+  { id: "r32_11", home: "TBD (H1)", away: "TBD (J2)", date: "2026-07-02", time: "22:00 EEST", stage: "Round of 32", venue: "Inglewood" },
+  { id: "r32_12", home: "TBD (K2)", away: "TBD (L2)", date: "2026-07-02", time: "02:00 EEST", stage: "Round of 32", venue: "Toronto" },
+  { id: "r32_13", home: "TBD (B1)", away: "TBD (3rd)", date: "2026-07-02", time: "06:00 EEST", stage: "Round of 32", venue: "Vancouver" },
+  { id: "r32_14", home: "TBD (D2)", away: "TBD (G2)", date: "2026-07-03", time: "21:00 EEST", stage: "Round of 32", venue: "Arlington" },
+  { id: "r32_15", home: "TBD (J1)", away: "TBD (H2)", date: "2026-07-03", time: "01:00 EEST", stage: "Round of 32", venue: "Miami" },
+  { id: "r32_16", home: "TBD (K1)", away: "TBD (3rd)", date: "2026-07-03", time: "04:30 EEST", stage: "Round of 32", venue: "Kansas City" },
+  { id: "r16_1", home: "TBD", away: "TBD", date: "2026-07-04", time: "20:00 EEST", stage: "Round of 16", venue: "Houston" },
+  { id: "r16_2", home: "TBD", away: "TBD", date: "2026-07-04", time: "00:00 EEST", stage: "Round of 16", venue: "Philadelphia" },
+  { id: "r16_3", home: "TBD", away: "TBD", date: "2026-07-05", time: "23:00 EEST", stage: "Round of 16", venue: "East Rutherford" },
+  { id: "r16_4", home: "TBD", away: "TBD", date: "2026-07-05", time: "03:00 EEST", stage: "Round of 16", venue: "Mexico City" },
+  { id: "r16_5", home: "TBD", away: "TBD", date: "2026-07-06", time: "22:00 EEST", stage: "Round of 16", venue: "Arlington" },
+  { id: "r16_6", home: "TBD", away: "TBD", date: "2026-07-06", time: "00:00 EEST", stage: "Round of 16", venue: "Seattle" },
+  { id: "r16_7", home: "TBD", away: "TBD", date: "2026-07-07", time: "19:00 EEST", stage: "Round of 16", venue: "Atlanta" },
+  { id: "r16_8", home: "TBD", away: "TBD", date: "2026-07-07", time: "23:00 EEST", stage: "Round of 16", venue: "Vancouver" },
+  { id: "qf1", home: "TBD", away: "TBD", date: "2026-07-09", time: "23:00 EEST", stage: "Quarterfinal", venue: "Foxborough" },
+  { id: "qf2", home: "TBD", away: "TBD", date: "2026-07-10", time: "22:00 EEST", stage: "Quarterfinal", venue: "Inglewood" },
+  { id: "qf3", home: "TBD", away: "TBD", date: "2026-07-11", time: "00:00 EEST", stage: "Quarterfinal", venue: "Miami Gardens" },
+  { id: "qf4", home: "TBD", away: "TBD", date: "2026-07-11", time: "04:00 EEST", stage: "Quarterfinal", venue: "Kansas City" },
+  { id: "sf1", home: "TBD", away: "TBD", date: "2026-07-14", time: "22:00 EEST", stage: "Semifinal", venue: "Arlington" },
+  { id: "sf2", home: "TBD", away: "TBD", date: "2026-07-15", time: "22:00 EEST", stage: "Semifinal", venue: "Atlanta" },
+  { id: "3p", home: "TBD", away: "TBD", date: "2026-07-18", time: "00:00 EEST", stage: "Third Place", venue: "Miami Gardens" },
+  { id: "final", home: "TBD", away: "TBD", date: "2026-07-19", time: "22:00 EEST", stage: "Final", venue: "East Rutherford" },
 ];
 
 const ALL_TEAMS = Object.values(WC2026_GROUPS).flat().sort();
@@ -224,10 +224,10 @@ function calcLeaderboard(leagueId, withMovement = false) {
 function useCountdown(targetDateStr, targetTimeStr) {
   const [countdown, setCountdown] = useState(null);
   useEffect(() => {
-    const etHour = parseInt(targetTimeStr?.split(":")[0] || "15");
-    const etMin = parseInt(targetTimeStr?.split(":")[1]?.split(" ")[0] || "0");
+    const eestHour = parseInt(targetTimeStr?.split(":")[0] || "15");
+    const eestMin = parseInt(targetTimeStr?.split(":")[1]?.split(" ")[0] || "0");
     // Approximate: treat ET as UTC-4 (EDT)
-    const target = new Date(`${targetDateStr}T${String(etHour + 4).padStart(2,"0")}:${String(etMin).padStart(2,"0")}:00Z`);
+    const target = new Date(`${targetDateStr}T${String(eestHour - 3).padStart(2,"0")}:${String(eestMin).padStart(2,"0")}:00Z`);
 
     const update = () => {
       const now = new Date();
@@ -246,7 +246,53 @@ function useCountdown(targetDateStr, targetTimeStr) {
   return countdown;
 }
 
-// ─── FLAGS ────────────────────────────────────────────────────────────────────
+// ─── LOCK HELPER ──────────────────────────────────────────────────────────────
+// First match kickoff — tournament winner locks 1 hour before this
+const TOURNAMENT_START = new Date("2026-06-11T19:00:00Z"); // 22:00 EEST = 19:00 UTC
+
+function kickoffUTC(dateStr, timeStr) {
+  const h = parseInt(timeStr?.split(":")[0] || "0");
+  const m = parseInt(timeStr?.split(":")[1]?.split(" ")[0] || "0");
+  return new Date(`${dateStr}T${String(h - 3).padStart(2,"0")}:${String(m).padStart(2,"0")}:00Z`);
+}
+
+function useFixtureLock(dateStr, timeStr) {
+  const [status, setStatus] = useState(null); // null | { locked, minsLeft, hoursLeft }
+  useEffect(() => {
+    const update = () => {
+      const kickoff = kickoffUTC(dateStr, timeStr);
+      const lockAt = new Date(kickoff.getTime() - 60 * 60 * 1000); // 1h before
+      const now = new Date();
+      const msLeft = lockAt - now;
+      if (msLeft <= 0) {
+        setStatus({ locked: true });
+      } else {
+        const totalMins = Math.floor(msLeft / 60000);
+        const h = Math.floor(totalMins / 60);
+        const m = totalMins % 60;
+        setStatus({ locked: false, hoursLeft: h, minsLeft: m });
+      }
+    };
+    update();
+    const id = setInterval(update, 30000); // update every 30s
+    return () => clearInterval(id);
+  }, [dateStr, timeStr]);
+  return status;
+}
+
+function useTournamentWinnerLock() {
+  const [locked, setLocked] = useState(false);
+  useEffect(() => {
+    const update = () => {
+      const lockAt = new Date(TOURNAMENT_START.getTime() - 60 * 60 * 1000);
+      setLocked(new Date() >= lockAt);
+    };
+    update();
+    const id = setInterval(update, 30000);
+    return () => clearInterval(id);
+  }, []);
+  return locked;
+}
 const FLAGS = {
   "Mexico": "🇲🇽", "South Africa": "🇿🇦", "Korea Republic": "🇰🇷", "Czechia": "🇨🇿",
   "Canada": "🇨🇦", "Bosnia and Herzegovina": "🇧🇦", "Qatar": "🇶🇦", "Switzerland": "🇨🇭",
@@ -662,6 +708,27 @@ const css = (dark = true) => `
   .pred-saved-tag { font-size: 11px; color: var(--green); font-weight: 600; }
   .pred-dirty-tag { font-size: 11px; color: var(--accent); }
 
+  .lock-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 6px;
+  }
+  .lock-badge.locked {
+    color: var(--accent2);
+    background: rgba(244,63,94,0.08);
+    border: 1px solid rgba(244,63,94,0.25);
+  }
+  .lock-badge.open {
+    color: var(--green);
+    background: rgba(34,197,94,0.08);
+    border: 1px solid rgba(34,197,94,0.2);
+  }
+  .lock-badge.closing-soon {
+    color: var(--gold);
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.25);
+  }
+
   /* Countdown */
   .countdown { display: flex; gap: 6px; align-items: center; margin: 8px 0 4px; }
   .cd-unit {
@@ -701,6 +768,7 @@ const css = (dark = true) => `
   .fixture-card:hover { border-color: var(--border2); box-shadow: ${dark ? "0 4px 16px rgba(0,0,0,0.3)" : "0 4px 16px rgba(0,0,0,0.08)"}; }
   .fixture-card.predicted { border-color: rgba(59,130,246,0.22); }
   .fixture-card.has-result { border-color: rgba(34,197,94,0.2); }
+  .fixture-card.locked { border-color: rgba(244,63,94,0.15); }
 
   .fixture-venue-strip { position: relative; height: 52px; overflow: hidden; }
   .fixture-venue-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.35) saturate(0.5); }
@@ -919,43 +987,60 @@ function FixtureCountdown({ date, time }) {
 
 // ─── RICH FIXTURE CARD ────────────────────────────────────────────────────────
 function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, scoring = DEFAULT_SCORING }) {
-  // Local draft — initialised from saved pred (default 0 if unpredicted)
-  const [draftHome, setDraftHome] = useState(pred?.homeGoals != null ? String(pred.homeGoals) : "0");
-  const [draftAway, setDraftAway] = useState(pred?.awayGoals != null ? String(pred.awayGoals) : "0");
+  const [draftHome, setDraftHome] = useState(pred?.homeGoals != null ? String(pred.homeGoals) : "");
+  const [draftAway, setDraftAway] = useState(pred?.awayGoals != null ? String(pred.awayGoals) : "");
   const [justSaved, setJustSaved] = useState(false);
+  const lockStatus = useFixtureLock(fixture.date, fixture.time);
 
-  // Sync draft when saved pred changes from outside (e.g. first load)
   useEffect(() => {
-    setDraftHome(pred?.homeGoals != null ? String(pred.homeGoals) : "0");
-    setDraftAway(pred?.awayGoals != null ? String(pred.awayGoals) : "0");
+    setDraftHome(pred?.homeGoals != null ? String(pred.homeGoals) : "");
+    setDraftAway(pred?.awayGoals != null ? String(pred.awayGoals) : "");
   }, [pred?.homeGoals, pred?.awayGoals]);
 
   const pts = calcMatchScore(pred, result, scoring);
   const hasResult = result != null;
   const hasPred = pred?.homeGoals != null;
+  const isLocked = hasResult || lockStatus?.locked === true;
 
-  // Is the draft different from what's saved?
-  const isDirty = !hasResult && (
+  // Dirty if either draft differs from saved, but only count as a valid prediction
+  // if both fields are filled in
+  const bothFilled = draftHome !== "" && draftAway !== "";
+  const isDirty = !isLocked && bothFilled && (
     String(draftHome) !== String(pred?.homeGoals ?? "") ||
     String(draftAway) !== String(pred?.awayGoals ?? "")
   );
 
   const handleConfirm = () => {
-    if (!onSave || hasResult) return;
+    if (!onSave || isLocked) return;
     onSave(fixture.id, draftHome, draftAway);
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1500);
   };
 
+  // Build lock badge
+  const renderLockBadge = () => {
+    if (hasResult) return null; // result shown instead
+    if (lockStatus?.locked) {
+      return <span className="lock-badge locked">🔒 Locked</span>;
+    }
+    if (!lockStatus) return null;
+    const { hoursLeft, minsLeft } = lockStatus;
+    const closingSoon = hoursLeft < 3;
+    const timeStr = hoursLeft > 0 ? `${hoursLeft}h ${minsLeft}m` : `${minsLeft}m`;
+    return (
+      <span className={`lock-badge ${closingSoon ? "closing-soon" : "open"}`}>
+        🔓 Locks in {timeStr}
+      </span>
+    );
+  };
+
   return (
-    <div className={`fixture-card ${hasPred ? "predicted" : ""} ${hasResult ? "has-result" : ""}`}>
-      {/* Venue + date bar — no image, no overlay issues */}
+    <div className={`fixture-card ${hasPred ? "predicted" : ""} ${hasResult ? "has-result" : ""} ${isLocked && !hasResult ? "locked" : ""}`}>
+      {/* Venue + date bar */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "8px 16px",
-        background: "var(--surface2)",
-        borderBottom: "1px solid var(--border)",
-        fontSize: 11, color: "var(--muted)",
+        padding: "8px 16px", background: "var(--surface2)",
+        borderBottom: "1px solid var(--border)", fontSize: 11, color: "var(--muted)",
       }}>
         <span>📍 {fixture.venue}</span>
         <span>{fixture.date} · {fixture.time}</span>
@@ -997,14 +1082,16 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
           <input
             type="number" min="0" max="20" className="score-input"
             value={draftHome}
-            disabled={hasResult}
+            disabled={isLocked}
+            placeholder="–"
             onChange={e => setDraftHome(e.target.value)}
           />
           <span className="score-sep">–</span>
           <input
             type="number" min="0" max="20" className="score-input"
             value={draftAway}
-            disabled={hasResult}
+            disabled={isLocked}
+            placeholder="–"
             onChange={e => setDraftAway(e.target.value)}
           />
         </div>
@@ -1013,37 +1100,35 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
           <div className="result-box">
             <div className="result-label">Result</div>
             <div className="result-score">{result.homeGoals}–{result.awayGoals}</div>
-            <span className={`pts-badge ${pts === 3 ? "pts-3" : pts === 0 ? "pts-0" : ""}`}>{pts}pt{pts !== 1 ? "s" : ""}</span>
+            <span className={`pts-badge ${pts === scoring.exactPoints ? "pts-3" : pts === 0 ? "pts-0" : ""}`}>{pts}pt{pts !== 1 ? "s" : ""}</span>
           </div>
         )}
       </div>
 
-      {/* Confirm row — only shown when no result yet */}
+      {/* Confirm / lock row */}
       {!hasResult && (
         <div className="pred-confirm-row">
-          <button
-            className={`btn-confirm${isDirty ? " dirty" : ""}`}
-            onClick={handleConfirm}
-            disabled={!isDirty && hasPred}
-          >
-            {hasPred && !isDirty ? "✓ Saved" : "Confirm"}
-          </button>
+          {!isLocked && (
+            <button
+              className={`btn-confirm${isDirty ? " dirty" : ""}`}
+              onClick={handleConfirm}
+              disabled={!bothFilled || (!isDirty && hasPred)}
+              title={!bothFilled ? "Enter both scores first" : ""}
+            >
+              {hasPred && !isDirty ? "✓ Saved" : "Confirm"}
+            </button>
+          )}
           {isDirty && <span className="pred-dirty-tag">Unsaved changes</span>}
           {justSaved && !isDirty && <span className="pred-saved-tag">✓ Prediction saved!</span>}
-          {!hasPred && !isDirty && (() => {
-            const etHour = parseInt(fixture.time?.split(":")[0] || "15");
-            const etMin  = parseInt(fixture.time?.split(":")[1]?.split(" ")[0] || "0");
-            const kickoff = new Date(`${fixture.date}T${String(etHour + 4).padStart(2,"0")}:${String(etMin).padStart(2,"0")}:00Z`);
-            const hoursLeft = (kickoff - new Date()) / 3600000;
-            if (hoursLeft > 0 && hoursLeft <= 24)
-              return <span className="deadline-badge">⚠️ Deadline in {Math.ceil(hoursLeft)}h</span>;
-            return null;
-          })()}
+          {!isLocked && !hasPred && !bothFilled && (
+            <span style={{ fontSize: 11, color: "var(--muted)", fontStyle: "italic" }}>No prediction yet</span>
+          )}
+          {renderLockBadge()}
         </div>
       )}
 
       {/* Countdown */}
-      {showCountdown && !hasResult && <FixtureCountdown date={fixture.date} time={fixture.time} />}
+      {showCountdown && !hasResult && !isLocked && <FixtureCountdown date={fixture.date} time={fixture.time} />}
     </div>
   );
 }
@@ -1124,9 +1209,9 @@ function MiniMatchCard({ fixture, pred, onClick }) {
         {hasPred
           ? <span className="match-card-pred-badge">🎯 {fixture.home} {pred.homeGoals} – {pred.awayGoals} {fixture.away}</span>
           : (() => {
-              const etHour = parseInt(fixture.time?.split(":")[0] || "15");
-              const etMin  = parseInt(fixture.time?.split(":")[1]?.split(" ")[0] || "0");
-              const kickoff = new Date(`${fixture.date}T${String(etHour + 4).padStart(2,"0")}:${String(etMin).padStart(2,"0")}:00Z`);
+              const eestHour = parseInt(fixture.time?.split(":")[0] || "15");
+              const eestMin  = parseInt(fixture.time?.split(":")[1]?.split(" ")[0] || "0");
+              const kickoff = new Date(`${fixture.date}T${String(eestHour - 3).padStart(2,"0")}:${String(eestMin).padStart(2,"0")}:00Z`);
               const hoursLeft = (kickoff - new Date()) / 3600000;
               if (hoursLeft > 0 && hoursLeft <= 24)
                 return <span className="deadline-badge" style={{ width: "100%", justifyContent: "center" }}>⚠️ Deadline in {Math.ceil(hoursLeft)}h — predict now!</span>;
@@ -1301,7 +1386,18 @@ function PredictionsTab({ user, leagueId, refresh }) {
   const stages = ["Group Stage", "Round of 32", "Round of 16", "Quarterfinal", "Semifinal", "Third Place", "Final"];
   const filtered = WC2026_FIXTURES.filter(f => f.stage === stageFilter);
 
-  const savePred = (fixtureId, homeGoals, awayGoals) => {
+  const twLocked = useTournamentWinnerLock();
+
+  const twLockBadge = () => {
+    if (twLocked) return <span className="lock-badge locked" style={{ marginLeft: 8 }}>🔒 Locked</span>;
+    const msLeft = (TOURNAMENT_START.getTime() - 60 * 60 * 1000) - new Date().getTime();
+    if (msLeft <= 0) return null;
+    const h = Math.floor(msLeft / 3600000);
+    const m = Math.floor((msLeft % 3600000) / 60000);
+    const closingSoon = h < 3;
+    const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+    return <span className={`lock-badge ${closingSoon ? "closing-soon" : "open"}`} style={{ marginLeft: 8 }}>🔓 Locks in {timeStr}</span>;
+  };
     const all = storage.get("sc_predictions") || {};
     if (!all[user.uid]) all[user.uid] = {};
     if (!all[user.uid][leagueId]) all[user.uid][leagueId] = {};
@@ -1338,9 +1434,18 @@ function PredictionsTab({ user, leagueId, refresh }) {
 
       {league.settings?.tournamentWinnerBonus && stageFilter === "Group Stage" && (
         <div className="card" style={{ marginBottom: 20 }}>
-          <div className="card-title">🏆 TOURNAMENT WINNER <span style={{ color: "var(--gold)", fontSize: 13 }}>(+{scoring.winnerPoints} pts)</span></div>
+          <div className="card-title" style={{ display: "flex", alignItems: "center" }}>
+            🏆 TOURNAMENT WINNER <span style={{ color: "var(--gold)", fontSize: 13, marginLeft: 8 }}>(+{scoring.winnerPoints} pts)</span>
+            {twLockBadge()}
+          </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <select className="form-select" value={myPreds["tournament_winner"] || ""} onChange={e => saveTournamentWinner(e.target.value)}>
+            <select
+              className="form-select"
+              value={myPreds["tournament_winner"] || ""}
+              disabled={twLocked}
+              onChange={e => !twLocked && saveTournamentWinner(e.target.value)}
+              style={{ opacity: twLocked ? 0.5 : 1, cursor: twLocked ? "not-allowed" : "pointer" }}
+            >
               <option value="">-- Select winner --</option>
               {ALL_TEAMS.map(t => <option key={t} value={t}>{flag(t)} {t}</option>)}
             </select>
@@ -1348,7 +1453,11 @@ function PredictionsTab({ user, leagueId, refresh }) {
           {myPreds["tournament_winner"] && (
             <p style={{ marginTop: 10, fontSize: 13, color: "var(--accent)" }}>
               Your pick: {flag(myPreds["tournament_winner"])} {myPreds["tournament_winner"]}
+              {twLocked && <span style={{ marginLeft: 8, color: "var(--accent2)", fontSize: 11 }}>(locked)</span>}
             </p>
+          )}
+          {twLocked && !myPreds["tournament_winner"] && (
+            <p style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>No prediction made before the deadline.</p>
           )}
         </div>
       )}
