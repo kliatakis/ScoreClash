@@ -1345,7 +1345,7 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
             {lb.slice(0, 5).map((entry, i) => (
               <div key={entry.uid} className="mini-lb-row">
                 <div className={`mini-lb-rank ${i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : ""}`}>
-                  {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
+                  {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i === lb.slice(0,5).length - 1 && lb.length > 3 ? "🚽" : i + 1}
                 </div>
                 <Avatar uid={entry.uid} size={28} username={entry.username} />
                 <div className={`mini-lb-name ${entry.uid === user.uid ? "you" : ""}`}>
@@ -2080,7 +2080,7 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                               {lb.map((entry, i) => (
                                 <tr key={entry.uid}>
                                   <td className={`lb-rank ${i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : ""}`}>
-                                    {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
+                                    {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i === lb.length - 1 && lb.length > 3 ? "🚽" : i + 1}
                                   </td>
                                   <td className={entry.uid === user.uid ? "lb-you" : ""}>
                                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2513,7 +2513,20 @@ export default function App() {
     return !d;
   });
 
-  const handleLogin = (u) => { setUser(u); setTab("dashboard"); };
+  // Auto-select league once data loads if user is in exactly one league
+  useEffect(() => {
+    if (!user || loading || selectedLeague) return;
+    const leagues = storage.get("sc_leagues") || {};
+    const myLeagues = Object.values(leagues).filter(l => l.members.includes(user.uid));
+    if (myLeagues.length === 1) setSelectedLeague(myLeagues[0].id);
+  }, [user, loading, tick]);
+    setUser(u);
+    setTab("dashboard");
+    // Auto-select if the user is in exactly one league
+    const leagues = storage.get("sc_leagues") || {};
+    const myLeagues = Object.values(leagues).filter(l => l.members.includes(u.uid));
+    if (myLeagues.length === 1) setSelectedLeague(myLeagues[0].id);
+  };
   const handleLogout = () => { setUser(null); setSelectedLeague(null); setTab("dashboard"); };
   const handleProfileUpdate = (updated) => { setUser(updated); refresh(); };
 
