@@ -2180,21 +2180,32 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                             </thead>
                             <tbody>
                               {lb.map((entry, i) => (
-                                <tr key={entry.uid}>
-                                  <td className={`lb-rank ${i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : ""}`}>
-                                    {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i === lb.length - 1 && lb.length > 3 ? "🚽" : i + 1}
-                                  </td>
-                                  <td className={entry.uid === user.uid ? "lb-you" : ""}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                      <Avatar uid={entry.uid} size={28} username={entry.username} />
-                                      <span>{entry.uid === user.uid ? "⭐ " : ""}{entry.username}</span>
-                                    </div>
-                                  </td>
-                                  <td className="lb-acc">{entry.exact}</td>
-                                  <td className="lb-acc">{entry.correct}</td>
-                                  <td className="lb-pts">{entry.points}</td>
-                                  <td style={{ textAlign: "center" }}>{movementLabel(entry.movement, entry.moveDiff)}</td>
-                                </tr>
+                                <>
+                                  <tr key={entry.uid} style={{
+                                    borderTop: i === lb.length - 1 && lb.length > 4
+                                      ? "2px solid var(--border2)"
+                                      : undefined,
+                                  }}>
+                                    <td className={`lb-rank ${i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : ""}`}>
+                                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i === lb.length - 1 && lb.length > 3 ? "🚽" : i + 1}
+                                    </td>
+                                    <td className={entry.uid === user.uid ? "lb-you" : ""}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                        <Avatar uid={entry.uid} size={28} username={entry.username} />
+                                        <span>{entry.uid === user.uid ? "⭐ " : ""}{entry.username}</span>
+                                      </div>
+                                    </td>
+                                    <td className="lb-acc">{entry.exact}</td>
+                                    <td className="lb-acc">{entry.correct}</td>
+                                    <td className="lb-pts" style={{ fontSize: 16 }}>{entry.points}</td>
+                                    <td style={{ textAlign: "center" }}>{movementLabel(entry.movement, entry.moveDiff)}</td>
+                                  </tr>
+                                  {i === 2 && lb.length > 4 && (
+                                    <tr key={`sep-${i}`}>
+                                      <td colSpan={6} style={{ padding: 0, borderBottom: "2px solid var(--border2)" }} />
+                                    </tr>
+                                  )}
+                                </>
                               ))}
                             </tbody>
                           </table>
