@@ -2520,6 +2520,8 @@ export default function App() {
     const myLeagues = Object.values(leagues).filter(l => l.members.includes(user.uid));
     if (myLeagues.length === 1) setSelectedLeague(myLeagues[0].id);
   }, [user, loading, tick]);
+
+  const handleLogin = (u) => {
     setUser(u);
     setTab("dashboard");
     // Auto-select if the user is in exactly one league
