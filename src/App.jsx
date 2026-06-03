@@ -2073,7 +2073,7 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                                 <th style={{ textAlign: "right" }}>Exact Score</th>
                                 <th style={{ textAlign: "right" }}>Outcome</th>
                                 <th style={{ textAlign: "right" }}>Points</th>
-                                <th style={{ textAlign: "center" }}>Move</th>
+                                <th style={{ textAlign: "center" }}>Form ▲▼</th>
                               </tr>
                             </thead>
                             <tbody>
