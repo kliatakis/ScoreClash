@@ -2080,7 +2080,7 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
   };
 
   const movementLabel = (m, d) => {
-    if (!m || m === "new") return <span className="lb-movement new">NEW</span>;
+    if (!m || m === "new") return <span className="lb-movement same">—</span>;
     if (m === "up")   return <span className="lb-movement up">▲ {d}</span>;
     if (m === "down") return <span className="lb-movement down">▼ {d}</span>;
     return <span className="lb-movement same">—</span>;
