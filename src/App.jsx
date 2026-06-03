@@ -763,12 +763,62 @@ const css = (dark = true) => `
   .fixture-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--r2); margin-bottom: 8px; overflow: hidden;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+    position: relative;
   }
   .fixture-card:hover { border-color: var(--border2); box-shadow: ${dark ? "0 4px 16px rgba(0,0,0,0.3)" : "0 4px 16px rgba(0,0,0,0.08)"}; }
-  .fixture-card.predicted { border-color: rgba(59,130,246,0.22); }
+  .fixture-card.predicted { border-color: rgba(59,130,246,0.3); border-left: 3px solid var(--accent); }
   .fixture-card.has-result { border-color: rgba(34,197,94,0.2); }
-  .fixture-card.locked { border-color: rgba(244,63,94,0.15); }
+  .fixture-card.locked { opacity: 0.6; }
+  .fixture-card.locked:hover { opacity: 0.75; }
+
+  /* Predicted corner badge */
+  .fixture-pred-corner {
+    position: absolute; top: 8px; right: 10px;
+    font-size: 10px; font-weight: 700; color: var(--accent);
+    background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
+    padding: 2px 8px; border-radius: 10px; z-index: 2;
+    pointer-events: none;
+  }
+
+  /* Date group header */
+  .fixture-date-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 18px 0 8px; margin-top: 4px;
+  }
+  .fixture-date-header-text {
+    font-size: 12px; font-weight: 700; color: var(--muted);
+    letter-spacing: 0.5px; white-space: nowrap;
+  }
+  .fixture-date-header-line {
+    flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Progress bar */
+  .pred-progress-wrap {
+    margin-bottom: 18px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r2); padding: 14px 18px;
+  }
+  .pred-progress-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; font-size: 12px;
+  }
+  .pred-progress-label { font-weight: 600; color: var(--text); }
+  .pred-progress-count { color: var(--muted); }
+  .pred-progress-bar-bg {
+    height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden;
+  }
+  .pred-progress-bar-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    transition: width 0.4s ease;
+  }
+  .pred-progress-stats {
+    display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .pred-progress-stat { font-size: 11px; color: var(--muted); }
+  .pred-progress-stat span { font-weight: 700; }
 
   .fixture-venue-strip { position: relative; height: 52px; overflow: hidden; }
   .fixture-venue-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.35) saturate(0.5); }
@@ -1036,6 +1086,7 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
 
   return (
     <div className={`fixture-card ${hasPred ? "predicted" : ""} ${hasResult ? "has-result" : ""} ${isLocked && !hasResult ? "locked" : ""}`}>
+      {hasPred && !hasResult && <div className="fixture-pred-corner">✓ Predicted</div>}
       {/* Venue + date bar */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -1417,6 +1468,28 @@ function PredictionsTab({ user, leagueId, refresh }) {
     refresh();
   };
 
+  // Progress stats for current stage
+  const stageFixtures = WC2026_FIXTURES.filter(f => f.stage === stageFilter);
+  const stagePredicted = stageFixtures.filter(f => myPreds[f.id]?.homeGoals != null).length;
+  const stageLocked = stageFixtures.filter(f => {
+    const kickoff = kickoffUTC(f.date, f.time);
+    return new Date() >= new Date(kickoff.getTime() - 3600000);
+  }).length;
+  const stageWithResult = stageFixtures.filter(f => results[f.id] != null).length;
+  const progressPct = stageFixtures.length > 0 ? Math.round((stagePredicted / stageFixtures.length) * 100) : 0;
+
+  // Group filtered fixtures by date
+  const fixturesByDate = filtered.reduce((acc, f) => {
+    if (!acc[f.date]) acc[f.date] = [];
+    acc[f.date].push(f);
+    return acc;
+  }, {});
+
+  const formatDate = (dateStr) => {
+    const d = new Date(dateStr + "T12:00:00Z");
+    return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  };
+
   const totalPts = WC2026_FIXTURES.reduce((acc, f) => acc + calcMatchScore(myPreds[f.id], results[f.id], scoring), 0);
 
   return (
@@ -1432,6 +1505,23 @@ function PredictionsTab({ user, leagueId, refresh }) {
         {stages.map(s => (
           <button key={s} className={`filter-btn ${stageFilter === s ? "active" : ""}`} onClick={() => setStageFilter(s)}>{s}</button>
         ))}
+      </div>
+
+      {/* Progress bar */}
+      <div className="pred-progress-wrap">
+        <div className="pred-progress-row">
+          <span className="pred-progress-label">{stageFilter} Predictions</span>
+          <span className="pred-progress-count">{stagePredicted} / {stageFixtures.length}</span>
+        </div>
+        <div className="pred-progress-bar-bg">
+          <div className="pred-progress-bar-fill" style={{ width: `${progressPct}%` }} />
+        </div>
+        <div className="pred-progress-stats">
+          <span className="pred-progress-stat"><span style={{ color: "var(--green)" }}>{stagePredicted}</span> predicted</span>
+          <span className="pred-progress-stat"><span style={{ color: "var(--muted)" }}>{stageFixtures.length - stagePredicted}</span> remaining</span>
+          {stageLocked > 0 && <span className="pred-progress-stat"><span style={{ color: "var(--accent2)" }}>{stageLocked}</span> locked</span>}
+          {stageWithResult > 0 && <span className="pred-progress-stat"><span style={{ color: "var(--gold)" }}>{stageWithResult}</span> results in</span>}
+        </div>
       </div>
 
       {league.settings?.tournamentWinnerBonus && stageFilter === "Group Stage" && (
@@ -1464,16 +1554,28 @@ function PredictionsTab({ user, leagueId, refresh }) {
         </div>
       )}
 
-      {filtered.map(fixture => (
-        <RichFixtureCard
-          key={fixture.id}
-          fixture={fixture}
-          pred={myPreds[fixture.id]}
-          result={results[fixture.id]}
-          onSave={savePred}
-          showCountdown={true}
-          scoring={scoring}
-        />
+      {/* Fixtures grouped by date */}
+      {Object.entries(fixturesByDate).map(([date, fixtures]) => (
+        <div key={date}>
+          <div className="fixture-date-header">
+            <span className="fixture-date-header-text">📅 {formatDate(date)}</span>
+            <div className="fixture-date-header-line" />
+            <span style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>
+              {fixtures.filter(f => myPreds[f.id]?.homeGoals != null).length}/{fixtures.length} predicted
+            </span>
+          </div>
+          {fixtures.map(fixture => (
+            <RichFixtureCard
+              key={fixture.id}
+              fixture={fixture}
+              pred={myPreds[fixture.id]}
+              result={results[fixture.id]}
+              onSave={savePred}
+              showCountdown={true}
+              scoring={scoring}
+            />
+          ))}
+        </div>
       ))}
     </>
   );
