@@ -985,22 +985,71 @@ const css = (dark = true) => `
   .auth-tab { flex: 1; background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 13px; font-weight: 500; padding: 8px; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
   .auth-tab.active { background: var(--accent); color: #fff; font-weight: 700; }
 
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
   @media (max-width: 640px) {
-    .main { padding: 14px; }
+    .main { padding: 12px; }
     .header { padding: 10px 14px; }
-    .nav { padding: 8px 12px; gap: 5px; }
-    .nav-tab { font-size: 12px; padding: 8px 13px; border-radius: 8px; }
-    .fixture-body { flex-wrap: wrap; gap: 10px; }
+    .nav { padding: 6px 10px; gap: 4px; }
+    .nav-tab { font-size: 11px; padding: 7px 11px; border-radius: 8px; }
+
+    /* Fixture cards — larger touch targets */
+    .fixture-body { flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
     .fixture-teams { order: 1; width: 100%; }
-    .fixture-pred { order: 2; }
+    .fixture-pred { order: 2; width: 100%; justify-content: center; gap: 12px; }
     .result-box { order: 3; }
-    .dash-hero { padding: 18px 16px; }
-    .dash-hero-title { font-size: 24px; }
-    .dash-hero-stats { gap: 16px; }
+    .score-input { width: 52px; font-size: 20px; padding: 8px; }
+    .btn-confirm { padding: 10px 22px; font-size: 13px; }
+    .pred-confirm-row { padding: 8px 12px 12px; flex-wrap: wrap; gap: 8px; }
+    .fixture-pred-corner { display: none; } /* too cluttered on mobile */
+
+    /* Fixture countdown tighter on mobile */
+    .fixture-cd-row { padding: 5px 12px 8px; }
+    .fcd-unit { padding: 3px 5px; min-width: 28px; }
+    .fcd-val { font-size: 13px; }
+
+    /* Dashboard */
+    .dash-hero { padding: 16px 14px; flex-direction: column; gap: 12px; }
+    .dash-hero-title { font-size: 22px; }
+    .dash-hero-stats { gap: 16px; justify-content: flex-start; }
     .dash-stat-val { font-size: 22px; }
-    .modal { padding: 24px; }
-    .auth-card { padding: 32px 24px; }
-    .match-card-mini { width: 240px; }
+    .dash-stat { align-items: flex-start; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .stat-card { padding: 14px 16px; }
+    .stat-card-val { font-size: 28px; }
+
+    /* Upcoming match cards — full width on mobile instead of horizontal scroll */
+    .upcoming-scroll { flex-direction: column; overflow-x: visible; padding-bottom: 0; }
+    .match-card-mini { width: 100%; }
+
+    /* Modal */
+    .modal { padding: 20px; }
+    .modal-title { font-size: 22px; }
+    .auth-card { padding: 28px 20px; }
+
+    /* League expanded */
+    .league-expanded-body { padding: 14px; }
+    .lb-table th, .lb-table td { padding: 8px 6px; font-size: 11px; }
+    .lb-rank { font-size: 15px; width: 28px; }
+    .lb-pts { font-size: 15px; }
+
+    /* Profile dropdown full width on mobile */
+    .profile-dropdown { width: calc(100vw - 32px); right: -14px; }
+
+    /* Filter row scrollable on mobile */
+    .filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-btn { flex-shrink: 0; }
+
+    /* Progress bar */
+    .pred-progress-wrap { padding: 12px 14px; }
+    .pred-progress-stats { gap: 10px; }
   }
 `;
 
@@ -1194,9 +1243,23 @@ const GROUP_NAMES = {
 function MiniMatchCard({ fixture, pred, onClick }) {
   const cd = useCountdown(fixture.date, fixture.time);
   const hasPred = pred?.homeGoals != null;
+  const lockStatus = useFixtureLock(fixture.date, fixture.time);
+  const isClosingSoon = !hasPred && lockStatus && !lockStatus.locked &&
+    lockStatus.hoursLeft < 3;
+  const isLocked = !hasPred && lockStatus?.locked;
 
   return (
-    <div className={`match-card-mini ${hasPred ? "has-pred" : ""}`} onClick={onClick}>
+    <div
+      className={`match-card-mini ${hasPred ? "has-pred" : ""}`}
+      onClick={onClick}
+      style={{
+        borderColor: isClosingSoon
+          ? "rgba(245,158,11,0.5)"
+          : isLocked
+            ? "rgba(244,63,94,0.2)"
+            : undefined,
+      }}
+    >
 
       {/* Group / stage bar */}
       <div className="match-card-group-bar">
@@ -1294,8 +1357,25 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
     else if (s === scoring.outcomePoints) correctOutcomes++;
   });
 
-  // Upcoming unplayed fixtures (next 6)
-  const upcoming = WC2026_FIXTURES.filter(f => !results[f.id] && f.home !== "TBD" && !f.home.startsWith("TBD")).slice(0, 8);
+  // Upcoming unplayed fixtures — unpredicted first, then by date, max 8
+  const upcoming = WC2026_FIXTURES
+    .filter(f => !results[f.id] && f.home !== "TBD" && !f.home.startsWith("TBD"))
+    .sort((a, b) => {
+      const aPred = myPreds[a.id]?.homeGoals != null;
+      const bPred = myPreds[b.id]?.homeGoals != null;
+      if (aPred !== bPred) return aPred ? 1 : -1; // unpredicted first
+      return new Date(a.date) - new Date(b.date);
+    })
+    .slice(0, 8);
+
+  // Count unpredicted upcoming fixtures that aren't locked
+  const unpredictedUrgent = upcoming.filter(f => {
+    const hasPred = myPreds[f.id]?.homeGoals != null;
+    if (hasPred) return false;
+    const kickoff = kickoffUTC(f.date, f.time);
+    const hoursLeft = (kickoff - new Date()) / 3600000;
+    return hoursLeft > 0 && hoursLeft <= 24;
+  }).length;
 
   // Mini leaderboard
   const lb = leagueId ? calcLeaderboard(leagueId) : [];
@@ -1366,7 +1446,18 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
       {/* Upcoming matches */}
       <div style={{ marginBottom: 24 }}>
         <div className="section-label">
-          <span className="section-label-text">Upcoming Matches</span>
+          <span className="section-label-text">
+            Upcoming Matches
+            {unpredictedUrgent > 0 && (
+              <span style={{
+                marginLeft: 8, fontSize: 10, fontWeight: 700,
+                color: "#fff", background: "var(--accent2)",
+                padding: "2px 8px", borderRadius: 10,
+              }}>
+                ⚠️ {unpredictedUrgent} closing soon
+              </span>
+            )}
+          </span>
           <button className="btn btn-ghost btn-sm" onClick={() => setTab("predictions")}>View all →</button>
         </div>
         {upcoming.length === 0 ? (
@@ -2301,15 +2392,37 @@ function CreateLeagueModal({ user, onClose, onDone }) {
 function JoinLeagueModal({ user, onClose, onDone }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [shake, setShake] = useState(false);
 
   const join = () => {
+    setError("");
+    const trimmed = code.toUpperCase().trim();
+    if (trimmed.length === 0) {
+      setError("Please enter a league code.");
+      triggerShake(); return;
+    }
+    if (trimmed.length < 6) {
+      setError("League codes are 6 characters — looks like yours is too short.");
+      triggerShake(); return;
+    }
     const leagues = storage.get("sc_leagues") || {};
-    const league = leagues[code.toUpperCase().trim()];
-    if (!league) return setError("League not found. Check the code and try again.");
-    if (league.members.includes(user.uid)) return setError("You're already in this league.");
+    const league = leagues[trimmed];
+    if (!league) {
+      setError(`No league found with code "${trimmed}". Double-check with the league admin.`);
+      triggerShake(); return;
+    }
+    if (league.members.includes(user.uid)) {
+      setError("You're already a member of this league.");
+      triggerShake(); return;
+    }
     league.members.push(user.uid);
     storage.set("sc_leagues", leagues);
     onDone(league.id);
+  };
+
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
   };
 
   return (
@@ -2317,14 +2430,31 @@ function JoinLeagueModal({ user, onClose, onDone }) {
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-title">Join a League</div>
         <p className="modal-sub">Enter the 6-character league code shared by the league admin.</p>
-        {error && <div className="error-msg">{error}</div>}
+        {error && <div className="error-msg">❌ {error}</div>}
         <div className="form-group">
           <label className="form-label">League Code</label>
-          <input className="form-input" value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. AB1234" maxLength={6} style={{ fontFamily: "monospace", letterSpacing: 4, fontSize: 20 }} />
+          <input
+            className="form-input"
+            value={code}
+            onChange={e => { setCode(e.target.value.toUpperCase()); setError(""); }}
+            onKeyDown={e => e.key === "Enter" && join()}
+            placeholder="e.g. AB1234"
+            maxLength={6}
+            style={{
+              fontFamily: "monospace", letterSpacing: 4, fontSize: 20,
+              borderColor: error ? "var(--accent2)" : undefined,
+              animation: shake ? "shake 0.4s ease" : undefined,
+            }}
+          />
+          {code.length > 0 && (
+            <div style={{ fontSize: 11, color: code.length === 6 ? "var(--green)" : "var(--muted)", marginTop: 6 }}>
+              {code.length}/6 characters {code.length === 6 ? "✓" : ""}
+            </div>
+          )}
         </div>
         <div className="modal-actions">
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={join}>Join League</button>
+          <button className="btn btn-primary" onClick={join} disabled={code.length !== 6}>Join League</button>
         </div>
       </div>
     </div>
