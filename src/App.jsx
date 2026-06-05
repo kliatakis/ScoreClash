@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { fsGet, fsSet, fsDel, fsSubscribe } from "./firebase.js";
+import { fsGet, fsSet, fsDel, fsSubscribe, fbRegister, fbLogin, fbLogout, fbResetPassword, fbDeleteAccount, fbOnAuthChange, auth } from "./firebase.js";
 
 // ─── DATA ──────────────────────────────────────────────────────────────────────
 
@@ -2463,27 +2463,61 @@ function JoinLeagueModal({ user, onClose, onDone }) {
 
 // ─── AUTH ──────────────────────────────────────────────────────────────────────
 function AuthPage({ onLogin }) {
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState("login"); // login | register | forgot
+  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handle = () => {
-    setError("");
-    if (!username.trim() || !password.trim()) return setError("Please fill all fields.");
-    const users = storage.get("sc_users") || {};
-    if (mode === "register") {
-      if (Object.values(users).find(u => u.username.toLowerCase() === username.toLowerCase()))
-        return setError("Username already taken.");
-      const uid = "u_" + Date.now();
-      users[uid] = { uid, username: username.trim(), password };
-      storage.set("sc_users", users);
-      onLogin({ uid, username: username.trim() });
-    } else {
-      const found = Object.values(users).find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
-      if (!found) return setError("Invalid username or password.");
-      onLogin({ uid: found.uid, username: found.username });
+  const handle = async () => {
+    setError(""); setInfo("");
+    if (!email.trim()) return setError("Please enter your email.");
+    if (mode === "forgot") {
+      setLoading(true);
+      try {
+        await fbResetPassword(email.trim());
+        setInfo("Password reset email sent! Check your inbox.");
+      } catch (e) {
+        setError(e.code === "auth/user-not-found"
+          ? "No account found with that email."
+          : "Failed to send reset email. Please try again.");
+      } finally { setLoading(false); }
+      return;
     }
+    if (!password.trim()) return setError("Please enter your password.");
+    if (mode === "register" && !username.trim()) return setError("Please choose a username.");
+    setLoading(true);
+    try {
+      if (mode === "register") {
+        // Check username uniqueness
+        const users = storage.get("sc_users") || {};
+        if (Object.values(users).find(u => u.username.toLowerCase() === username.trim().toLowerCase()))
+          return setError("Username already taken. Please choose another.");
+        const fbUser = await fbRegister(email.trim(), password);
+        const uid = fbUser.uid;
+        users[uid] = { uid, username: username.trim(), email: email.trim() };
+        await storage.set("sc_users", users);
+        onLogin({ uid, username: username.trim(), email: email.trim() });
+      } else {
+        const fbUser = await fbLogin(email.trim(), password);
+        const users = storage.get("sc_users") || {};
+        const profile = users[fbUser.uid];
+        if (!profile) return setError("Account not found in database. Please register.");
+        onLogin({ uid: fbUser.uid, username: profile.username, email: fbUser.email });
+      }
+    } catch (e) {
+      if (e.code === "auth/user-not-found" || e.code === "auth/wrong-password" || e.code === "auth/invalid-credential")
+        setError("Incorrect email or password.");
+      else if (e.code === "auth/email-already-in-use")
+        setError("An account with this email already exists. Try signing in.");
+      else if (e.code === "auth/weak-password")
+        setError("Password must be at least 6 characters.");
+      else if (e.code === "auth/invalid-email")
+        setError("Please enter a valid email address.");
+      else setError("Something went wrong. Please try again.");
+    } finally { setLoading(false); }
   };
 
   return (
@@ -2491,22 +2525,75 @@ function AuthPage({ onLogin }) {
       <div className="auth-card">
         <div className="auth-logo">SCORE<span>CLASH</span></div>
         <p className="auth-sub">World Cup 2026 Prediction Leagues</p>
-        <div className="auth-tabs">
-          <button className={`auth-tab ${mode === "login" ? "active" : ""}`} onClick={() => { setMode("login"); setError(""); }}>Sign in</button>
-          <button className={`auth-tab ${mode === "register" ? "active" : ""}`} onClick={() => { setMode("register"); setError(""); }}>Register</button>
-        </div>
+
+        {mode !== "forgot" && (
+          <div className="auth-tabs">
+            <button className={`auth-tab ${mode === "login" ? "active" : ""}`} onClick={() => { setMode("login"); setError(""); setInfo(""); }}>Sign in</button>
+            <button className={`auth-tab ${mode === "register" ? "active" : ""}`} onClick={() => { setMode("register"); setError(""); setInfo(""); }}>Register</button>
+          </div>
+        )}
+
         {error && <div className="error-msg">{error}</div>}
-        <div className="form-group">
-          <label className="form-label">Username</label>
-          <input className="form-input" value={username} onChange={e => setUsername(e.target.value)} onKeyDown={e => e.key === "Enter" && handle()} placeholder="Enter username" />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Password</label>
-          <input className="form-input" type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handle()} placeholder="Enter password" />
-        </div>
-        <button className="btn btn-primary btn-full" onClick={handle}>
-          {mode === "login" ? "Sign in" : "Create account"}
-        </button>
+        {info && <div className="success-msg">{info}</div>}
+
+        {mode === "forgot" ? (
+          <>
+            <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 20 }}>
+              Enter your email and we'll send you a link to reset your password.
+            </p>
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input className="form-input" type="email" value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handle()}
+                placeholder="your@email.com" autoFocus />
+            </div>
+            <button className="btn btn-primary btn-full" onClick={handle} disabled={loading}>
+              {loading ? "Sending..." : "Send Reset Email"}
+            </button>
+            <button
+              style={{ width: "100%", background: "none", border: "none", color: "var(--muted)", fontSize: 12, cursor: "pointer", marginTop: 12, fontFamily: "var(--font-body)" }}
+              onClick={() => { setMode("login"); setError(""); setInfo(""); }}
+            >← Back to sign in</button>
+          </>
+        ) : (
+          <>
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input className="form-input" type="email" value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handle()}
+                placeholder="your@email.com" />
+            </div>
+            {mode === "register" && (
+              <div className="form-group">
+                <label className="form-label">Username</label>
+                <input className="form-input" value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handle()}
+                  placeholder="Choose a display name" maxLength={20} />
+              </div>
+            )}
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input className="form-input" type="password" value={password}
+                onChange={e => setPassword(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handle()}
+                placeholder={mode === "register" ? "At least 6 characters" : "Enter password"} />
+            </div>
+            {mode === "login" && (
+              <div style={{ textAlign: "right", marginTop: -8, marginBottom: 16 }}>
+                <button
+                  style={{ background: "none", border: "none", color: "var(--accent)", fontSize: 12, cursor: "pointer", fontFamily: "var(--font-body)", fontWeight: 600 }}
+                  onClick={() => { setMode("forgot"); setError(""); setInfo(""); }}
+                >Forgot password?</button>
+              </div>
+            )}
+            <button className="btn btn-primary btn-full" onClick={handle} disabled={loading}>
+              {loading ? "Please wait..." : mode === "login" ? "Sign in" : "Create account"}
+            </button>
+          </>
+        )}
         <p style={{ textAlign: "center", fontSize: 12, color: "var(--muted)", marginTop: 20 }}>
           ⚽ Predict. Compete. Win bragging rights.
         </p>
@@ -2522,6 +2609,8 @@ function ProfileDropdown({ user, onLogout, onUpdate, darkMode, onToggleDark }) {
   const [newUsername, setNewUsername] = useState(user.username);
   const [saved, setSaved] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
   const dropRef = useRef(null);
   const fileRef = useRef(null);
 
@@ -2566,60 +2655,76 @@ function ProfileDropdown({ user, onLogout, onUpdate, darkMode, onToggleDark }) {
   };
 
   const handleDeleteAccount = async () => {
-    const allUsers = storage.get("sc_users") || {};
-    const allLeagues = storage.get("sc_leagues") || {};
-    const allPredictions = storage.get("sc_predictions") || {};
+    setDeleteError("");
+    if (!deletePassword) { setDeleteError("Please enter your password to confirm."); return; }
+    try {
+      // Re-auth via Firebase then delete Firebase account
+      await fbDeleteAccount(deletePassword);
 
-    // 1 — Handle leagues: transfer admin or remove membership
-    Object.values(allLeagues).forEach(league => {
-      if (!league.members.includes(user.uid)) return;
+      // Clean up Firestore data
+      const allUsers = storage.get("sc_users") || {};
+      const allLeagues = storage.get("sc_leagues") || {};
+      const allPredictions = storage.get("sc_predictions") || {};
 
-      if (league.adminId === user.uid) {
-        // Transfer admin to next member, or delete league if sole member
-        const remaining = league.members.filter(m => m !== user.uid);
-        if (remaining.length === 0) {
-          delete allLeagues[league.id];
+      Object.values(allLeagues).forEach(league => {
+        if (!league.members.includes(user.uid)) return;
+        if (league.adminId === user.uid) {
+          const remaining = league.members.filter(m => m !== user.uid);
+          if (remaining.length === 0) delete allLeagues[league.id];
+          else { league.adminId = remaining[0]; league.members = remaining; }
         } else {
-          league.adminId = remaining[0];
-          league.members = remaining;
+          league.members = league.members.filter(m => m !== user.uid);
+          if (league.members.length === 0) delete allLeagues[league.id];
         }
-      } else {
-        league.members = league.members.filter(m => m !== user.uid);
-        if (league.members.length === 0) delete allLeagues[league.id];
-      }
-    });
+      });
 
-    // 2 — Delete predictions
-    delete allPredictions[user.uid];
+      delete allPredictions[user.uid];
+      delete allUsers[user.uid];
 
-    // 3 — Delete user
-    delete allUsers[user.uid];
+      await storage.set("sc_users", allUsers);
+      await storage.set("sc_leagues", allLeagues);
+      await storage.set("sc_predictions", allPredictions);
 
-    // 4 — Persist all changes to Firestore
-    await storage.set("sc_users", allUsers);
-    await storage.set("sc_leagues", allLeagues);
-    await storage.set("sc_predictions", allPredictions);
-
-    // 5 — Log out
-    setShowDeleteConfirm(false);
-    setOpen(false);
-    onLogout();
+      // Firebase Auth listener handles logout automatically
+      setShowDeleteConfirm(false);
+    } catch (e) {
+      if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential")
+        setDeleteError("Incorrect password. Please try again.");
+      else setDeleteError("Failed to delete account. Please try again.");
+    }
   };
 
   const initials = user.username.slice(0, 2).toUpperCase();
 
   return (
     <div style={{ position: "relative" }} ref={dropRef}>
-      {/* Delete account confirm modal */}
+      {/* Delete account confirm modal — needs password re-auth */}
       {showDeleteConfirm && (
-        <ConfirmModal
-          title="Delete Account"
-          message={`Are you sure you want to permanently delete your account "${user.username}"? All your predictions will be deleted. If you admin any leagues, admin will be transferred to the next member. This cannot be undone.`}
-          confirmLabel="Delete My Account"
-          danger={true}
-          onConfirm={handleDeleteAccount}
-          onCancel={() => setShowDeleteConfirm(false)}
-        />
+        <div className="modal-overlay" onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteError(""); }}>
+          <div className="modal" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-title" style={{ color: "var(--accent2)" }}>Delete Account</div>
+            <p className="modal-sub">
+              This will permanently delete your account "{user.username}", all your predictions, and transfer any leagues you admin. This cannot be undone.
+            </p>
+            {deleteError && <div className="error-msg">{deleteError}</div>}
+            <div className="form-group">
+              <label className="form-label">Confirm your password</label>
+              <input
+                className="form-input"
+                type="password"
+                value={deletePassword}
+                onChange={e => { setDeletePassword(e.target.value); setDeleteError(""); }}
+                onKeyDown={e => e.key === "Enter" && handleDeleteAccount()}
+                placeholder="Enter your password"
+                autoFocus
+              />
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteError(""); }}>Cancel</button>
+              <button className="btn btn-danger" onClick={handleDeleteAccount} disabled={!deletePassword}>Delete My Account</button>
+            </div>
+          </div>
+        </div>
       )}
 
       <button className={`profile-btn ${open ? "open" : ""}`} onClick={() => setOpen(o => !o)}>
@@ -2727,24 +2832,41 @@ export default function App() {
   useEffect(() => {
     let unsubs = [];
     const bootstrap = async () => {
-      // Initial fetch of all keys
       await Promise.all(STORE_KEYS.map(async (k) => {
         const val = await fsGet(k);
         _cache[k] = val ?? {};
       }));
       setLoading(false);
 
-      // Subscribe to real-time updates for each key
       unsubs = STORE_KEYS.map(k =>
         fsSubscribe(k, (val) => {
           _cache[k] = val ?? {};
-          setTick(t => t + 1); // trigger re-render on any change
+          setTick(t => t + 1);
         })
       );
     };
     bootstrap();
     return () => unsubs.forEach(u => u && u());
   }, []);
+
+  // ── Listen to Firebase Auth state ─────────────────────────────────────────
+  useEffect(() => {
+    const unsub = fbOnAuthChange(async (fbUser) => {
+      if (fbUser && !loading) {
+        // User is signed in — load their profile from Firestore
+        const users = storage.get("sc_users") || {};
+        const profile = users[fbUser.uid];
+        if (profile) {
+          setUser({ uid: fbUser.uid, username: profile.username, email: fbUser.email });
+        }
+      } else if (!fbUser) {
+        setUser(null);
+        setSelectedLeague(null);
+        setTab("dashboard");
+      }
+    });
+    return () => unsub();
+  }, [loading]);
 
   // ── Persist dark mode preference in localStorage ────────────────────────────
   useEffect(() => {
@@ -2767,12 +2889,11 @@ export default function App() {
   const handleLogin = (u) => {
     setUser(u);
     setTab("dashboard");
-    // Auto-select if the user is in exactly one league
     const leagues = storage.get("sc_leagues") || {};
     const myLeagues = Object.values(leagues).filter(l => l.members.includes(u.uid));
     if (myLeagues.length === 1) setSelectedLeague(myLeagues[0].id);
   };
-  const handleLogout = () => { setUser(null); setSelectedLeague(null); setTab("dashboard"); };
+  const handleLogout = async () => { await fbLogout(); };
   const handleProfileUpdate = (updated) => { setUser(updated); refresh(); };
 
   // Loading screen
