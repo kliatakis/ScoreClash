@@ -1475,19 +1475,18 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
             {daysToTournament > 0 && ` · ${daysToTournament} days until kick-off`}
           </div>
         </div>
-          {myRank > 0 && (
-            <div className="dash-hero-stats">
-              <div className="dash-stat">
-                <div className="dash-stat-val gold">#{myRank}</div>
-                <div className="dash-stat-label">League Rank</div>
-              </div>
-              <div className="dash-stat">
-                <div className="dash-stat-val accent">{totalPts}</div>
-                <div className="dash-stat-label">Points</div>
-              </div>
+        {myRank > 0 && (
+          <div className="dash-hero-stats">
+            <div className="dash-stat">
+              <div className="dash-stat-val gold">#{myRank}</div>
+              <div className="dash-stat-label">League Rank</div>
             </div>
-          )}
-        </div>
+            <div className="dash-stat">
+              <div className="dash-stat-val accent">{totalPts}</div>
+              <div className="dash-stat-label">Points</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stat cards — 4 distinct metrics */}
