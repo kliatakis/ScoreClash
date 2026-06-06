@@ -309,7 +309,47 @@ const FLAGS = {
 };
 const flag = (team) => FLAGS[team] || "🏳";
 
-// ─── LOGO SVG COMPONENT ───────────────────────────────────────────────────────
+// Small icon version — just the football with lightning bolt, for header + favicon
+function ScoreClashIcon({ size = 36, style = {} }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"
+      width={size} height={size} style={{ display: "block", ...style }}>
+      <defs>
+        <filter id="ic-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="2.5" result="blur1"/>
+          <feGaussianBlur stdDeviation="6" result="blur2"/>
+          <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="ic-soft" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="1.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <linearGradient id="ic-blue" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#3b82f6"/>
+          <stop offset="100%" stopColor="#06d6f7"/>
+        </linearGradient>
+      </defs>
+      {/* Outer ring */}
+      <circle cx="40" cy="40" r="36" fill="none" stroke="url(#ic-blue)" strokeWidth="1.2" opacity="0.3"/>
+      {/* Ball */}
+      <circle cx="40" cy="40" r="30" fill="none" stroke="url(#ic-blue)" strokeWidth="2" filter="url(#ic-soft)"/>
+      <circle cx="40" cy="40" r="27" fill="#0d0d16"/>
+      {/* Hex pattern */}
+      <g stroke="url(#ic-blue)" strokeWidth="0.8" fill="url(#ic-blue)" fillOpacity="0.08" opacity="0.7">
+        <polygon points="40,24 52,31 52,45 40,52 28,45 28,31"/>
+        <line x1="40" y1="10" x2="40" y2="24"/>
+        <line x1="52" y1="31" x2="64" y2="24"/>
+        <line x1="52" y1="45" x2="64" y2="52"/>
+        <line x1="40" y1="52" x2="40" y2="66"/>
+        <line x1="28" y1="45" x2="16" y2="52"/>
+        <line x1="28" y1="31" x2="16" y2="24"/>
+      </g>
+      {/* Lightning bolt */}
+      <path d="M44 16 L32 40 L40 40 L28 64 L52 36 L43 36 Z"
+        fill="url(#ic-blue)" filter="url(#ic-glow)"/>
+    </svg>
+  );
+}
 function ScoreClashLogo({ width = 420, style = {} }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 260"
@@ -1625,7 +1665,7 @@ function PredictionsTab({ user, leagueId, refresh }) {
     return <span className={`lock-badge ${closingSoon ? "closing-soon" : "open"}`} style={{ marginLeft: 8 }}>🔓 Locks in {timeStr}</span>;
   };
 
-  const savePred = (fixtureId, homeGoals, awayGoals) => {
+  const savePred = async (fixtureId, homeGoals, awayGoals) => {
     const all = storage.get("sc_predictions") || {};
     if (!all[user.uid]) all[user.uid] = {};
     if (!all[user.uid][leagueId]) all[user.uid][leagueId] = {};
@@ -3035,7 +3075,10 @@ export default function App() {
       <style>{css(darkMode)}</style>
       <div className="app">
         <header className="header">
-          <div className="logo" style={{ cursor: "pointer" }} onClick={() => setTab("dashboard")}>SCORE<span>CLASH</span></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => setTab("dashboard")}>
+            <ScoreClashIcon size={36} />
+            <div className="logo">SCORE<span>CLASH</span></div>
+          </div>
           <div className="header-user">
             <ProfileDropdown user={user} onLogout={handleLogout} onUpdate={handleProfileUpdate} darkMode={darkMode} onToggleDark={toggleDark} />
           </div>
