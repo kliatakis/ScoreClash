@@ -309,6 +309,78 @@ const FLAGS = {
 };
 const flag = (team) => FLAGS[team] || "🏳";
 
+// ─── LOGO SVG COMPONENT ───────────────────────────────────────────────────────
+function ScoreClashLogo({ width = 420, style = {} }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 260"
+      width={width} style={{ display: "block", ...style }}>
+      <defs>
+        <filter id="sc-neon-soft" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="sc-neon-strong" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="5" result="blur1"/>
+          <feGaussianBlur stdDeviation="12" result="blur2"/>
+          <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <linearGradient id="sc-blue" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#3b82f6"/>
+          <stop offset="100%" stopColor="#06d6f7"/>
+        </linearGradient>
+        <linearGradient id="sc-blue-v" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#3b82f6"/>
+          <stop offset="100%" stopColor="#06d6f7"/>
+        </linearGradient>
+        <linearGradient id="sc-red" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#f43f5e"/>
+          <stop offset="100%" stopColor="#fb923c"/>
+        </linearGradient>
+        <radialGradient id="sc-bg-glow" cx="35%" cy="50%" r="40%">
+          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.1"/>
+          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <rect width="780" height="260" fill="url(#sc-bg-glow)"/>
+
+      {/* Football icon */}
+      <circle cx="135" cy="118" r="88" fill="none" stroke="url(#sc-blue)" strokeWidth="1.5" opacity="0.2"/>
+      <circle cx="135" cy="118" r="72" fill="none" stroke="url(#sc-blue)" strokeWidth="2.5" filter="url(#sc-neon-soft)"/>
+      <circle cx="135" cy="118" r="68" fill="#0d0d16"/>
+      <g stroke="url(#sc-blue)" strokeWidth="1.2" fill="url(#sc-blue)" fillOpacity="0.08" opacity="0.7">
+        <polygon points="135,92 156,105 156,131 135,144 114,131 114,105"/>
+        <line x1="135" y1="50" x2="135" y2="92"/>
+        <line x1="156" y1="105" x2="182" y2="91"/>
+        <line x1="156" y1="131" x2="182" y2="145"/>
+        <line x1="135" y1="144" x2="135" y2="184"/>
+        <line x1="114" y1="131" x2="88" y2="145"/>
+        <line x1="114" y1="105" x2="88" y2="91"/>
+      </g>
+      <path d="M143 76 L122 118 L136 118 L118 160 L154 110 L139 110 Z"
+        fill="url(#sc-blue)" filter="url(#sc-neon-strong)"/>
+
+      {/* Divider */}
+      <rect x="228" y="42" width="2" height="154" rx="1" fill="url(#sc-blue-v)" opacity="0.35"/>
+
+      {/* Wordmark */}
+      <text x="250" y="110" fontFamily="'Bebas Neue', 'Arial Black', Impact, sans-serif"
+        fontSize="86" letterSpacing="6" fill="url(#sc-blue)" filter="url(#sc-neon-soft)">SCORE</text>
+      <text x="250" y="186" fontFamily="'Bebas Neue', 'Arial Black', Impact, sans-serif"
+        fontSize="86" letterSpacing="6" fill="url(#sc-red)" filter="url(#sc-neon-soft)">CLASH</text>
+
+      {/* Separator */}
+      <rect x="250" y="196" width="492" height="1.5" rx="1" fill="url(#sc-red)" opacity="0.35"/>
+
+      {/* Slogan */}
+      <text x="250" y="228" fontFamily="'Bebas Neue', 'Arial Black', Impact, sans-serif"
+        fontSize="19" letterSpacing="3" fill="#5c6380">
+        PREDICT. COMPETE. WIN BRAGGING RIGHTS.
+      </text>
+    </svg>
+  );
+}
+
 // ─── AVATARS ──────────────────────────────────────────────────────────────────
 const PRESET_AVATARS = [
   { id: "a1",  emoji: "🦁", label: "Lion" },
@@ -1118,14 +1190,20 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
 
   // Build lock badge
   const renderLockBadge = () => {
-    if (hasResult) return null; // result shown instead
+    if (hasResult) return null;
     if (lockStatus?.locked) {
       return <span className="lock-badge locked">🔒 Locked</span>;
     }
     if (!lockStatus) return null;
     const { hoursLeft, minsLeft } = lockStatus;
+    const daysLeft = Math.floor(hoursLeft / 24);
+    const remHours = hoursLeft % 24;
     const closingSoon = hoursLeft < 3;
-    const timeStr = hoursLeft > 0 ? `${hoursLeft}h ${minsLeft}m` : `${minsLeft}m`;
+    const timeStr = daysLeft > 0
+      ? `${daysLeft}d ${remHours}h`
+      : hoursLeft > 0
+        ? `${hoursLeft}h ${minsLeft}m`
+        : `${minsLeft}m`;
     return (
       <span className={`lock-badge ${closingSoon ? "closing-soon" : "open"}`}>
         🔓 Locks in {timeStr}
@@ -1391,12 +1469,12 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
       <div className="dash-hero">
         <div className="dash-hero-bg" />
         <div className="dash-hero-content">
-          <div className="dash-hero-eyebrow">⚽ FIFA World Cup 2026</div>
-          <div className="dash-hero-title">WELCOME BACK, <span>{user.username.toUpperCase()}</span></div>
+          <ScoreClashLogo width={320} style={{ marginBottom: 12 }} />
           <div className="dash-hero-sub">
             {league ? `Playing in: ${league.name}` : "Select a league to start predicting"}
             {daysToTournament > 0 && ` · ${daysToTournament} days until kick-off`}
           </div>
+        </div>
           {myRank > 0 && (
             <div className="dash-hero-stats">
               <div className="dash-stat">
@@ -1534,10 +1612,17 @@ function PredictionsTab({ user, leagueId, refresh }) {
     if (twLocked) return <span className="lock-badge locked" style={{ marginLeft: 8 }}>🔒 Locked</span>;
     const msLeft = (TOURNAMENT_START.getTime() - 60 * 60 * 1000) - new Date().getTime();
     if (msLeft <= 0) return null;
-    const h = Math.floor(msLeft / 3600000);
-    const m = Math.floor((msLeft % 3600000) / 60000);
-    const closingSoon = h < 3;
-    const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+    const totalMins = Math.floor(msLeft / 60000);
+    const daysLeft = Math.floor(totalMins / 1440);
+    const remHours = Math.floor((totalMins % 1440) / 60);
+    const remMins = totalMins % 60;
+    const totalHours = Math.floor(msLeft / 3600000);
+    const closingSoon = totalHours < 3;
+    const timeStr = daysLeft > 0
+      ? `${daysLeft}d ${remHours}h`
+      : totalHours > 0
+        ? `${totalHours}h ${remMins}m`
+        : `${remMins}m`;
     return <span className={`lock-badge ${closingSoon ? "closing-soon" : "open"}`} style={{ marginLeft: 8 }}>🔓 Locks in {timeStr}</span>;
   };
 
@@ -2523,8 +2608,9 @@ function AuthPage({ onLogin }) {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="auth-logo">SCORE<span>CLASH</span></div>
-        <p className="auth-sub">World Cup 2026 Prediction Leagues</p>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
+          <ScoreClashLogo width={320} />
+        </div>
 
         {mode !== "forgot" && (
           <div className="auth-tabs">
