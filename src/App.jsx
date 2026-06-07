@@ -626,19 +626,21 @@ const css = (dark = true) => `
     border: 1px solid transparent;
     color: var(--muted);
     font-family: var(--font-body); font-size: 13px; font-weight: 500;
-    padding: 7px 16px;
-    border-radius: 8px;
+    padding: 7px 18px;
+    border-radius: 20px;
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
     letter-spacing: 0.1px;
     flex-shrink: 0;
   }
   .nav-tab:hover { background: var(--surface2); color: var(--text); border-color: var(--border); }
   .nav-tab.active {
-    background: var(--surface2); color: var(--accent);
-    border-color: var(--border2); font-weight: 700;
-    box-shadow: inset 0 -2px 0 var(--accent);
+    background: rgba(59,130,246,0.15);
+    color: var(--accent);
+    border-color: rgba(59,130,246,0.35);
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(59,130,246,0.15);
   }
 
   /* MAIN */
@@ -1049,6 +1051,27 @@ const css = (dark = true) => `
   .league-name { font-weight: 600; font-size: 15px; }
   .league-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
   .league-code { font-family: monospace; background: var(--surface); padding: 4px 10px; border-radius: 6px; font-size: 12px; color: var(--accent); border: 1px solid rgba(59,130,246,0.2); }
+
+  .copy-code-wrap {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .copy-code-box {
+    font-family: monospace; font-size: 22px; letter-spacing: 6px;
+    color: var(--accent); background: var(--surface2);
+    border: 1px solid rgba(59,130,246,0.25); border-radius: 10px;
+    padding: 10px 18px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    user-select: all;
+  }
+  .copy-code-box:hover { border-color: var(--accent); background: rgba(59,130,246,0.06); }
+  .btn-copy {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px; padding: 8px 14px;
+    font-family: var(--font-body); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-copy.copied { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.08); }
 
   .league-expanded {
     background: var(--surface); border: 1px solid var(--accent);
@@ -1585,6 +1608,8 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
   const tournamentStart = new Date("2026-06-11T19:00:00Z");
   const now = new Date();
   const daysToTournament = Math.max(0, Math.ceil((tournamentStart - now) / 86400000));
+  const hour = now.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
     <>
@@ -1593,6 +1618,9 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
         <div className="dash-hero-bg" />
         <div className="dash-hero-content">
           <ScoreClashLogo width={320} style={{ marginBottom: 12 }} />
+          <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 2 }}>
+            {greeting}, <span style={{ color: "var(--text)", fontWeight: 700 }}>{user.username}</span> 👋
+          </div>
           <div className="dash-hero-sub">
             {league ? `Playing in: ${league.name}` : "Select a league to start predicting"}
             {daysToTournament > 0 && ` · ${daysToTournament} days until kick-off`}
@@ -2382,6 +2410,25 @@ function InlineAdminPanel({ user, league, leagueId, refresh, onLeagueDeleted }) 
   );
 }
 
+// ─── COPY CODE COMPONENT ──────────────────────────────────────────────────────
+function CopyCode({ code }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <div className="copy-code-wrap">
+      <div className="copy-code-box" onClick={copy}>{code}</div>
+      <button className={`btn-copy ${copied ? "copied" : ""}`} onClick={copy}>
+        {copied ? "✓ Copied!" : "Copy"}
+      </button>
+    </div>
+  );
+}
+
 // ─── LEAGUES TAB ──────────────────────────────────────────────────────────────
 function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal, refresh }) {
   const [expandedId, setExpandedId] = useState(selectedLeague || null);
@@ -2541,9 +2588,9 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                     {expandedTab === "info" && (
                       <div>
                         <div style={{ marginBottom: 16 }}>
-                          <div style={{ fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 6 }}>Invite Code</div>
-                          <span className="league-code" style={{ fontSize: 18, letterSpacing: 4 }}>{league.id}</span>
-                          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>Share this code with friends so they can join.</div>
+                          <div style={{ fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>Invite Code</div>
+                          <CopyCode code={league.id} />
+                          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>Share this code with friends so they can join.</div>
                         </div>
                         <div className="divider" />
                         {(() => {
