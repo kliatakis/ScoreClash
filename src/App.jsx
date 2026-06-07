@@ -1084,18 +1084,83 @@ const css = (dark = true) => `
   /* AUTH */
   .auth-wrap {
     min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
-    background: ${dark
-      ? "radial-gradient(ellipse at 30% 20%, rgba(59,130,246,0.07) 0%, transparent 55%), radial-gradient(ellipse at 70% 80%, rgba(244,63,94,0.06) 0%, transparent 55%)"
-      : "radial-gradient(ellipse at 30% 20%, rgba(37,99,235,0.05) 0%, transparent 55%), radial-gradient(ellipse at 70% 80%, rgba(225,29,72,0.04) 0%, transparent 55%)"
-    };
+    background: var(--bg);
+    position: relative; overflow: hidden;
   }
-  .auth-card { background: var(--surface); border: 1px solid var(--border2); border-radius: 24px; padding: 48px 40px; width: 100%; max-width: 420px; box-shadow: ${dark ? "0 24px 80px rgba(0,0,0,0.5)" : "0 16px 48px rgba(0,0,0,0.1)"}; }
+
+  /* Animated background grid */
+  .auth-wrap::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    animation: grid-drift 20s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes grid-drift {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(48px); }
+  }
+
+  /* Floating orbs */
+  .auth-wrap::after {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(59,130,246,0.12) 0%, transparent 45%),
+      radial-gradient(ellipse at 80% 80%, rgba(244,63,94,0.1) 0%, transparent 45%),
+      radial-gradient(ellipse at 60% 10%, rgba(6,214,247,0.07) 0%, transparent 35%);
+    animation: orb-pulse 8s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes orb-pulse {
+    0% { opacity: 0.6; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1.05); }
+  }
+
+  .auth-card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 24px; padding: 48px 40px; width: 100%; max-width: 420px;
+    box-shadow: ${dark ? "0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.08)" : "0 16px 48px rgba(0,0,0,0.1)"};
+    position: relative; z-index: 1;
+    animation: card-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
   .auth-logo { font-family: var(--font-display); font-size: 42px; letter-spacing: 3px; text-align: center; color: var(--accent); margin-bottom: 4px; }
   .auth-logo span { color: var(--accent2); }
   .auth-sub { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 36px; }
   .auth-tabs { display: flex; margin-bottom: 28px; background: var(--surface2); border-radius: 8px; padding: 4px; }
   .auth-tab { flex: 1; background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 13px; font-weight: 500; padding: 8px; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
   .auth-tab.active { background: var(--accent); color: #fff; font-weight: 700; }
+
+  /* Prediction confirmed burst */
+  @keyframes confirm-burst {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.18); }
+    60%  { transform: scale(0.95); }
+    100% { transform: scale(1); }
+  }
+  @keyframes saved-fade {
+    0%   { opacity: 0; transform: translateY(4px); }
+    20%  { opacity: 1; transform: translateY(0); }
+    80%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  .pred-saved-tag {
+    font-size: 11px; color: var(--green); font-weight: 700;
+    animation: saved-fade 1.5s ease forwards;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .btn-confirm.just-saved {
+    animation: confirm-burst 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    background: var(--green) !important; color: #fff !important;
+  }
 
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
@@ -1328,16 +1393,16 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
         <div className="pred-confirm-row">
           {!isLocked && (
             <button
-              className={`btn-confirm${isDirty ? " dirty" : ""}`}
+              className={`btn-confirm${isDirty ? " dirty" : ""}${justSaved && !isDirty ? " just-saved" : ""}`}
               onClick={handleConfirm}
-              disabled={!bothFilled || (!isDirty && hasPred)}
+              disabled={!bothFilled || (!isDirty && hasPred && !justSaved)}
               title={!bothFilled ? "Enter both scores first" : ""}
             >
               {hasPred && !isDirty ? "✓ Saved" : "Confirm"}
             </button>
           )}
           {isDirty && <span className="pred-dirty-tag">Unsaved changes</span>}
-          {justSaved && !isDirty && <span className="pred-saved-tag">✓ Prediction saved!</span>}
+          {justSaved && !isDirty && <span className="pred-saved-tag">⚽ Prediction saved!</span>}
           {!isLocked && !hasPred && !bothFilled && (
             <span style={{ fontSize: 11, color: "var(--muted)", fontStyle: "italic" }}>No prediction yet</span>
           )}
@@ -3027,26 +3092,42 @@ export default function App() {
       <style>{css(darkMode)}</style>
       <div style={{
         minHeight: "100vh", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center", background: "var(--bg)", gap: 20,
+        alignItems: "center", justifyContent: "center", background: "var(--bg)",
+        gap: 24, position: "relative", overflow: "hidden",
       }}>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 36, letterSpacing: 3, color: "var(--accent)" }}>
-          SCORE<span style={{ color: "var(--accent2)" }}>CLASH</span>
-        </div>
-        <div style={{ fontSize: 13, color: "var(--muted)" }}>Loading...</div>
+        {/* Animated background */}
         <div style={{
-          width: 200, height: 3, background: "var(--surface2)",
-          borderRadius: 2, overflow: "hidden",
-        }}>
-          <div style={{
-            height: "100%", background: "var(--accent)", borderRadius: 2,
-            animation: "loadbar 1.2s ease-in-out infinite",
-          }} />
+          position: "absolute", inset: 0,
+          backgroundImage: "linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+          animation: "grid-drift 20s linear infinite",
+          pointerEvents: "none",
+        }}/>
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "radial-gradient(ellipse at 30% 30%, rgba(59,130,246,0.1) 0%, transparent 50%), radial-gradient(ellipse at 70% 70%, rgba(244,63,94,0.08) 0%, transparent 50%)",
+          pointerEvents: "none",
+        }}/>
+        {/* Logo */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <ScoreClashLogo width={340} />
+        </div>
+        {/* Loading bar */}
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 220, height: 3, background: "var(--surface2)", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{ height: "100%", background: "linear-gradient(90deg, var(--accent), var(--green))", borderRadius: 2, animation: "loadbar 1.2s ease-in-out infinite" }} />
+          </div>
+          <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: 2, textTransform: "uppercase" }}>Loading</div>
         </div>
         <style>{`
           @keyframes loadbar {
             0% { width: 0%; margin-left: 0; }
             50% { width: 60%; margin-left: 20%; }
             100% { width: 0%; margin-left: 100%; }
+          }
+          @keyframes grid-drift {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(48px); }
           }
         `}</style>
       </div>
