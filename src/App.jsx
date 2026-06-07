@@ -1743,7 +1743,7 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
         <div className="card">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <span className="section-label-text">League Standings</span>
-            <button className="btn btn-ghost btn-sm" onClick={() => setTab("leaderboard")}>Full table →</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => setTab("leagues")}>Full table →</button>
           </div>
           <div className="mini-lb">
             {lb.slice(0, 5).map((entry, i) => (
@@ -2734,8 +2734,9 @@ function JoinLeagueModal({ user, onClose, onDone }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
+  const [joining, setJoining] = useState(false);
 
-  const join = () => {
+  const join = async () => {
     setError("");
     const trimmed = code.toUpperCase().trim();
     if (trimmed.length === 0) {
@@ -2746,19 +2747,30 @@ function JoinLeagueModal({ user, onClose, onDone }) {
       setError("League codes are 6 characters — looks like yours is too short.");
       triggerShake(); return;
     }
-    const leagues = storage.get("sc_leagues") || {};
-    const league = leagues[trimmed];
-    if (!league) {
-      setError(`No league found with code "${trimmed}". Double-check with the league admin.`);
-      triggerShake(); return;
+
+    setJoining(true);
+    try {
+      // Always fetch fresh from Firestore to avoid cache race conditions
+      const freshLeagues = await fsGet("sc_leagues") || {};
+      const league = freshLeagues[trimmed];
+
+      if (!league) {
+        setError(`No league found with code "${trimmed}". Double-check with the league admin.`);
+        triggerShake(); return;
+      }
+      if (league.members.includes(user.uid)) {
+        setError("You're already a member of this league.");
+        triggerShake(); return;
+      }
+      league.members.push(user.uid);
+      storage.set("sc_leagues", freshLeagues);
+      onDone(league.id);
+    } catch (e) {
+      setError("Something went wrong. Please try again.");
+      triggerShake();
+    } finally {
+      setJoining(false);
     }
-    if (league.members.includes(user.uid)) {
-      setError("You're already a member of this league.");
-      triggerShake(); return;
-    }
-    league.members.push(user.uid);
-    storage.set("sc_leagues", leagues);
-    onDone(league.id);
   };
 
   const triggerShake = () => {
@@ -2795,7 +2807,9 @@ function JoinLeagueModal({ user, onClose, onDone }) {
         </div>
         <div className="modal-actions">
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={join} disabled={code.length !== 6}>Join League</button>
+          <button className="btn btn-primary" onClick={join} disabled={code.length !== 6 || joining}>
+            {joining ? "Joining..." : "Join League"}
+          </button>
         </div>
       </div>
     </div>
