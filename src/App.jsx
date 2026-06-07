@@ -992,7 +992,25 @@ const css = (dark = true) => `
   .result-score { font-family: var(--font-display); font-size: 19px; letter-spacing: 1px; }
   .result-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
 
-  /* FILTER */
+  /* Tab fade transition */
+  .tab-content {
+    animation: tab-fade 0.15s ease;
+  }
+  @keyframes tab-fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Grouped stage filter */
+  .stage-filter-wrap { margin-bottom: 18px; }
+  .stage-filter-group { margin-bottom: 8px; }
+  .stage-filter-group-label {
+    font-size: 9px; font-weight: 700; color: var(--muted);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 5px; padding-left: 2px;
+  }
+  .stage-filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
   .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
   .filter-btn {
     background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
@@ -1707,7 +1725,10 @@ function PredictionsTab({ user, leagueId, refresh }) {
   const results = storage.get("sc_results") || {};
   const scoring = getScoringSettings(league);
 
-  const stages = ["Group Stage", "Round of 32", "Round of 16", "Quarterfinal", "Semifinal", "Third Place", "Final"];
+  const stageGroups = [
+    { label: "Group Stage", stages: ["Group Stage"] },
+    { label: "Knockout", stages: ["Round of 32", "Round of 16", "Quarterfinal", "Semifinal", "Third Place", "Final"] },
+  ];
   const filtered = WC2026_FIXTURES.filter(f => f.stage === stageFilter);
 
   const twLocked = useTournamentWinnerLock();
@@ -1781,9 +1802,34 @@ function PredictionsTab({ user, leagueId, refresh }) {
         </div>
       </div>
 
-      <div className="filter-row">
-        {stages.map(s => (
-          <button key={s} className={`filter-btn ${stageFilter === s ? "active" : ""}`} onClick={() => setStageFilter(s)}>{s}</button>
+      <div className="stage-filter-wrap">
+        {stageGroups.map(group => (
+          <div key={group.label} className="stage-filter-group">
+            <div className="stage-filter-group-label">{group.label}</div>
+            <div className="stage-filter-row">
+              {group.stages.map(s => {
+                const count = WC2026_FIXTURES.filter(f => f.stage === s).length;
+                const predicted = WC2026_FIXTURES.filter(f => f.stage === s && myPreds[f.id]?.homeGoals != null).length;
+                return (
+                  <button
+                    key={s}
+                    className={`filter-btn ${stageFilter === s ? "active" : ""}`}
+                    onClick={() => setStageFilter(s)}
+                  >
+                    {s}
+                    {count > 0 && (
+                      <span style={{
+                        marginLeft: 5, fontSize: 9, fontWeight: 700,
+                        opacity: 0.7,
+                      }}>
+                        {predicted}/{count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         ))}
       </div>
 
@@ -3179,10 +3225,12 @@ export default function App() {
         </nav>
 
         <main className="main">
-          {tab === "dashboard" && <DashboardTab user={user} leagueId={selectedLeague} setTab={setTab} refresh={refresh} />}
-          {tab === "leagues" && <LeaguesTab user={user} myLeagues={myLeagues} selectedLeague={selectedLeague} onSetLeague={setSelectedLeague} onOpenModal={setModal} refresh={refresh} />}
-          {tab === "predictions" && selectedLeague && <PredictionsTab user={user} leagueId={selectedLeague} refresh={refresh} />}
-          {tab === "groups" && <GroupsTab />}
+          <div className="tab-content" key={tab}>
+            {tab === "dashboard" && <DashboardTab user={user} leagueId={selectedLeague} setTab={setTab} refresh={refresh} />}
+            {tab === "leagues" && <LeaguesTab user={user} myLeagues={myLeagues} selectedLeague={selectedLeague} onSetLeague={setSelectedLeague} onOpenModal={setModal} refresh={refresh} />}
+            {tab === "predictions" && selectedLeague && <PredictionsTab user={user} leagueId={selectedLeague} refresh={refresh} />}
+            {tab === "groups" && <GroupsTab />}
+          </div>
         </main>
 
         {modal === "create" && <CreateLeagueModal user={user} onClose={() => setModal(null)} onDone={(id) => { setSelectedLeague(id); setModal(null); setTab("leagues"); refresh(); }} />}
