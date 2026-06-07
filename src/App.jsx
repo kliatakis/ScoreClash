@@ -885,6 +885,7 @@ const css = (dark = true) => `
   .fixture-card.has-result { border-color: rgba(34,197,94,0.2); }
   .fixture-card.locked { opacity: 0.6; }
   .fixture-card.locked:hover { opacity: 0.75; }
+  .fixture-card.in-progress { border-color: rgba(244,63,94,0.35); border-left: 3px solid var(--accent2); opacity: 1 !important; }
 
   /* Predicted corner badge */
   .fixture-pred-corner {
@@ -988,6 +989,27 @@ const css = (dark = true) => `
     font-size: 11px; font-weight: 700; color: var(--gold);
     background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
     padding: 3px 10px; border-radius: 6px;
+  }
+
+  /* Match in progress badge */
+  .in-progress-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; color: #fff;
+    background: var(--accent2); border: 1px solid var(--accent2);
+    padding: 4px 12px; border-radius: 6px;
+    animation: progress-pulse 1.5s ease-in-out infinite;
+  }
+  .in-progress-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #fff; animation: dot-blink 1s ease-in-out infinite;
+  }
+  @keyframes progress-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+  @keyframes dot-blink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
   }
 
   .result-box { text-align: center; min-width: 56px; }
@@ -1319,6 +1341,11 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
   const hasPred = pred?.homeGoals != null;
   const isLocked = hasResult || lockStatus?.locked === true;
 
+  // Match in progress: locked (kicked off) but no result yet
+  const kickoff = kickoffUTC(fixture.date, fixture.time);
+  const now = new Date();
+  const isInProgress = !hasResult && lockStatus?.locked && now >= kickoff;
+
   // Dirty if either draft differs from saved, but only count as a valid prediction
   // if both fields are filled in
   const bothFilled = draftHome !== "" && draftAway !== "";
@@ -1358,8 +1385,9 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
   };
 
   return (
-    <div className={`fixture-card ${hasPred ? "predicted" : ""} ${hasResult ? "has-result" : ""} ${isLocked && !hasResult ? "locked" : ""}`}>
-      {hasPred && !hasResult && <div className="fixture-pred-corner">✓ Predicted</div>}
+    <div className={`fixture-card ${hasPred ? "predicted" : ""} ${hasResult ? "has-result" : ""} ${isLocked && !hasResult ? "locked" : ""} ${isInProgress ? "in-progress" : ""}`}>
+      {hasPred && !hasResult && !isInProgress && <div className="fixture-pred-corner">✓ Predicted</div>}
+      {isInProgress && <div className="fixture-pred-corner" style={{ background: "rgba(244,63,94,0.15)", borderColor: "rgba(244,63,94,0.4)", color: "var(--accent2)" }}>⚽ Live</div>}
       {/* Venue + date bar */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -1432,7 +1460,13 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
       {/* Confirm / lock row */}
       {!hasResult && (
         <div className="pred-confirm-row">
-          {!isLocked && (
+          {isInProgress && (
+            <span className="in-progress-badge">
+              <span className="in-progress-dot" />
+              Match in progress — awaiting result
+            </span>
+          )}
+          {!isInProgress && !isLocked && (
             <button
               className={`btn-confirm${isDirty ? " dirty" : ""}${justSaved && !isDirty ? " just-saved" : ""}`}
               onClick={handleConfirm}
@@ -1442,12 +1476,12 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
               {hasPred && !isDirty ? "✓ Saved" : "Confirm"}
             </button>
           )}
-          {isDirty && <span className="pred-dirty-tag">Unsaved changes</span>}
-          {justSaved && !isDirty && <span className="pred-saved-tag">⚽ Prediction saved!</span>}
-          {!isLocked && !hasPred && !bothFilled && (
+          {!isInProgress && isDirty && <span className="pred-dirty-tag">Unsaved changes</span>}
+          {!isInProgress && justSaved && !isDirty && <span className="pred-saved-tag">⚽ Prediction saved!</span>}
+          {!isInProgress && !isLocked && !hasPred && !bothFilled && (
             <span style={{ fontSize: 11, color: "var(--muted)", fontStyle: "italic" }}>No prediction yet</span>
           )}
-          {renderLockBadge()}
+          {!isInProgress && renderLockBadge()}
         </div>
       )}
 
@@ -1724,6 +1758,31 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
                 <div className="mini-lb-pts">{entry.points}</div>
               </div>
             ))}
+            {/* Show user's own rank if they're outside the top 5 */}
+            {myRank > 5 && (() => {
+              const myEntry = lb.find(e => e.uid === user.uid);
+              return myEntry ? (
+                <>
+                  <div style={{ padding: "6px 0", textAlign: "center", fontSize: 11, color: "var(--muted)" }}>
+                    · · ·
+                  </div>
+                  <div className="mini-lb-row" style={{ background: "rgba(244,63,94,0.04)", borderRadius: 8, padding: "8px 6px" }}>
+                    <div className="mini-lb-rank">{myRank === lb.length && lb.length > 3 ? "🚽" : myRank}</div>
+                    <Avatar uid={user.uid} size={28} username={user.username} />
+                    <div className="mini-lb-name you">⭐ {user.username}</div>
+                    <div className="mini-lb-pts">{myEntry.points}</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", textAlign: "center", paddingTop: 6 }}>
+                    You are {myRank - 5} place{myRank - 5 !== 1 ? "s" : ""} behind 5th
+                  </div>
+                </>
+              ) : null;
+            })()}
+            {lb.length > 5 && myRank <= 5 && (
+              <div style={{ padding: "8px 0 0", textAlign: "center", fontSize: 11, color: "var(--muted)" }}>
+                +{lb.length - 5} more · <button className="btn btn-ghost btn-sm" style={{ fontSize: 10, padding: "2px 8px" }} onClick={() => setTab("leaderboard")}>See all</button>
+              </div>
+            )}
           </div>
         </div>
       )}
