@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import {
   getFirestore,
   doc, getDoc, setDoc, deleteDoc, onSnapshot,
-  updateDoc,
+  collection, getDocs,
 } from "firebase/firestore";
 import {
   getAuth,
@@ -29,7 +29,7 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
-// ─── Firestore helpers ────────────────────────────────────────────────────────
+// ─── store/* helpers (leagues, predictions, results) ─────────────────────────
 export async function fsGet(key) {
   try {
     const snap = await getDoc(doc(db, "store", key));
@@ -54,9 +54,7 @@ export function fsSubscribe(key, callback) {
   });
 }
 
-// ─── Atomic single-user write ─────────────────────────────────────────────────
-// Instead of reading the whole sc_users blob and rewriting it,
-// we use a separate /users/{uid} document so each user only writes their own.
+// ─── users/* helpers (one doc per user — atomic, no race condition) ───────────
 export async function fsWriteUser(uid, profile) {
   await setDoc(doc(db, "users", uid), profile);
 }
@@ -68,10 +66,27 @@ export async function fsReadUser(uid) {
   } catch { return null; }
 }
 
-export function fsSubscribeUser(uid, callback) {
-  return onSnapshot(doc(db, "users", uid), snap => {
-    callback(snap.exists() ? snap.data() : null);
+export async function fsDeleteUser(uid) {
+  await deleteDoc(doc(db, "users", uid));
+}
+
+// Subscribe to ALL user docs — builds a {uid: profile} map in real time
+export function fsSubscribeUsers(callback) {
+  return onSnapshot(collection(db, "users"), (snap) => {
+    const users = {};
+    snap.forEach(d => { users[d.id] = d.data(); });
+    callback(users);
   });
+}
+
+// Get all users once
+export async function fsGetAllUsers() {
+  try {
+    const snap = await getDocs(collection(db, "users"));
+    const users = {};
+    snap.forEach(d => { users[d.id] = d.data(); });
+    return users;
+  } catch { return {}; }
 }
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
