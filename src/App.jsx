@@ -2548,7 +2548,17 @@ function CopyCode({ code }) {
 function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal, refresh }) {
   const [expandedId, setExpandedId] = useState(selectedLeague || null);
   const [expandedTab, setExpandedTab] = useState("standings");
-  const [leaveConfirm, setLeaveConfirm] = useState(null); // leagueId to leave
+  const [leaveConfirm, setLeaveConfirm] = useState(null);
+
+  // Refresh users cache when this tab mounts so usernames always show correctly
+  useEffect(() => {
+    fsGetAllUsers().then(users => {
+      if (users && Object.keys(users).length > 0) {
+        _cache["sc_users"] = users;
+        refresh();
+      }
+    });
+  }, []);
 
   const handleLeave = (leagueId) => {
     const leagues = storage.get("sc_leagues") || {};
@@ -3309,21 +3319,30 @@ export default function App() {
   // ── Listen to Firebase Auth state ─────────────────────────────────────────
   useEffect(() => {
     const unsub = fbOnAuthChange(async (fbUser) => {
-      if (fbUser && !loading) {
-        // Read user profile from individual doc — atomic, no race condition
-        let profile = await fsReadUser(fbUser.uid);
-        if (profile) {
-          mergeUserIntoCache(fbUser.uid, profile);
-          setUser({ uid: fbUser.uid, username: profile.username, email: fbUser.email });
-        }
-      } else if (!fbUser) {
+      if (!fbUser) {
         setUser(null);
         setSelectedLeague(null);
         setTab("dashboard");
+        return;
+      }
+      // Wait for bootstrap to finish (loading becomes false)
+      // by reading profile AND all other data fresh
+      const [profile, freshLeagues, freshPredictions, freshResults] = await Promise.all([
+        fsReadUser(fbUser.uid),
+        fsGet("sc_leagues"),
+        fsGet("sc_predictions"),
+        fsGet("sc_results"),
+      ]);
+      if (profile) {
+        mergeUserIntoCache(fbUser.uid, profile);
+        _cache["sc_leagues"] = freshLeagues || {};
+        _cache["sc_predictions"] = freshPredictions || {};
+        _cache["sc_results"] = freshResults || {};
+        setUser({ uid: fbUser.uid, username: profile.username, email: fbUser.email });
       }
     });
     return () => unsub();
-  }, [loading]);
+  }, []);
 
   // ── Persist dark mode preference in localStorage ────────────────────────────
   useEffect(() => {
@@ -3344,12 +3363,13 @@ export default function App() {
   }, [user, loading, tick]);
 
   const handleLogin = async (u) => {
-    // Fetch all data fresh from Firestore before rendering
-    const [freshLeagues, freshPredictions, freshResults] = await Promise.all([
+    const [allUsers, freshLeagues, freshPredictions, freshResults] = await Promise.all([
+      fsGetAllUsers(),
       fsGet("sc_leagues"),
       fsGet("sc_predictions"),
       fsGet("sc_results"),
     ]);
+    _cache["sc_users"] = allUsers || {};
     _cache["sc_leagues"] = freshLeagues || {};
     _cache["sc_predictions"] = freshPredictions || {};
     _cache["sc_results"] = freshResults || {};
