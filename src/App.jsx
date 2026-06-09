@@ -1208,7 +1208,16 @@ const css = (dark = true) => `
   .auth-tab { flex: 1; background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 13px; font-weight: 500; padding: 8px; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
   .auth-tab.active { background: var(--accent); color: #fff; font-weight: 700; }
 
-  /* Prediction confirmed burst */
+  /* Password input with eye toggle */
+  .password-wrap { position: relative; }
+  .password-wrap .form-input { padding-right: 44px; }
+  .password-eye {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--muted);
+    font-size: 18px; line-height: 1; padding: 4px;
+    transition: color 0.15s; display: flex; align-items: center;
+  }
+  .password-eye:hover { color: var(--text); }
   @keyframes confirm-burst {
     0%   { transform: scale(1); }
     30%  { transform: scale(1.18); }
@@ -2862,6 +2871,7 @@ function AuthPage({ onLogin }) {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
@@ -2975,10 +2985,17 @@ function AuthPage({ onLogin }) {
             )}
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input className="form-input" type="password" value={password}
-                onChange={e => setPassword(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handle()}
-                placeholder={mode === "register" ? "At least 6 characters" : "Enter password"} />
+              <div className="password-wrap">
+                <input className="form-input"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handle()}
+                  placeholder={mode === "register" ? "At least 6 characters" : "Enter password"} />
+                <button className="password-eye" type="button" onClick={() => setShowPassword(s => !s)}>
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
             {mode === "login" && (
               <div style={{ textAlign: "right", marginTop: -4, marginBottom: 16 }}>
@@ -3015,6 +3032,7 @@ function ProfileDropdown({ user, onLogout, onUpdate, darkMode, onToggleDark }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
   const dropRef = useRef(null);
   const fileRef = useRef(null);
 
@@ -3113,15 +3131,20 @@ function ProfileDropdown({ user, onLogout, onUpdate, darkMode, onToggleDark }) {
             {deleteError && <div className="error-msg">{deleteError}</div>}
             <div className="form-group">
               <label className="form-label">Confirm your password</label>
-              <input
-                className="form-input"
-                type="password"
-                value={deletePassword}
-                onChange={e => { setDeletePassword(e.target.value); setDeleteError(""); }}
-                onKeyDown={e => e.key === "Enter" && handleDeleteAccount()}
-                placeholder="Enter your password"
-                autoFocus
-              />
+              <div className="password-wrap">
+                <input
+                  className="form-input"
+                  type={showDeletePassword ? "text" : "password"}
+                  value={deletePassword}
+                  onChange={e => { setDeletePassword(e.target.value); setDeleteError(""); }}
+                  onKeyDown={e => e.key === "Enter" && handleDeleteAccount()}
+                  placeholder="Enter your password"
+                  autoFocus
+                />
+                <button className="password-eye" type="button" onClick={() => setShowDeletePassword(s => !s)}>
+                  {showDeletePassword ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
             <div className="modal-actions">
               <button className="btn btn-ghost" onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteError(""); }}>Cancel</button>
