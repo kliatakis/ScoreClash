@@ -2857,9 +2857,12 @@ function AuthPage({ onLogin }) {
         onLogin({ uid, username: username.trim(), email: email.trim() });
       } else {
         const fbUser = await fbLogin(email.trim(), password);
-        const users = storage.get("sc_users") || {};
-        const profile = users[fbUser.uid];
+        // Always fetch fresh from Firestore — cache may not be loaded yet
+        const freshUsers = await fsGet("sc_users") || {};
+        const profile = freshUsers[fbUser.uid];
         if (!profile) return setError("Account not found in database. Please register.");
+        // Populate cache with fresh data
+        _cache["sc_users"] = freshUsers;
         onLogin({ uid: fbUser.uid, username: profile.username, email: fbUser.email });
       }
     } catch (e) {
@@ -3209,10 +3212,11 @@ export default function App() {
   useEffect(() => {
     const unsub = fbOnAuthChange(async (fbUser) => {
       if (fbUser && !loading) {
-        // User is signed in — load their profile from Firestore
-        const users = storage.get("sc_users") || {};
-        const profile = users[fbUser.uid];
+        // Always fetch fresh — cache may not be populated yet on page reload
+        const freshUsers = await fsGet("sc_users") || {};
+        const profile = freshUsers[fbUser.uid];
         if (profile) {
+          _cache["sc_users"] = freshUsers;
           setUser({ uid: fbUser.uid, username: profile.username, email: fbUser.email });
         }
       } else if (!fbUser) {
