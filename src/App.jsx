@@ -442,7 +442,7 @@ const PRESET_AVATARS = [
   { id: "a17", emoji: "🎯", label: "Target" },
   { id: "a18", emoji: "👑", label: "Crown" },
   { id: "a19", emoji: "🚀", label: "Rocket" },
-  { id: "a20", emoji: "🎭", label: "Mask" },
+  { id: "a21", emoji: "🐐", label: "Goat" },
 ];
 
 // Get avatar for a user — returns { type: 'emoji'|'image', value }
@@ -570,7 +570,7 @@ const css = (dark = true) => `
   .profile-dd-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
   .profile-dd-section-title { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
 
-  .avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+  .avatar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
   .avatar-option {
     aspect-ratio: 1; border-radius: 10px; border: 2px solid var(--border);
     background: var(--surface2); display: flex; align-items: center; justify-content: center;
