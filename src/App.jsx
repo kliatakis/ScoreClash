@@ -1685,31 +1685,31 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
       <div className="grid-4" style={{ marginBottom: 24 }}>
         <div className="stat-card" style={{ "--card-accent": "var(--accent)" }}>
           <div className="stat-card-icon">🏅</div>
-          <div className="stat-card-val" style={{ color: "var(--accent)" }}>{totalPts}</div>
+          <div className="stat-card-val" style={{ color: totalPts > 0 ? "var(--accent)" : "var(--muted)" }}>{totalPts}</div>
           <div className="stat-card-label">Total Points</div>
-          <div className="stat-card-sub">{exactHits} exact · {correctOutcomes} correct outcome</div>
+          <div className="stat-card-sub">{scoredFixtures.length > 0 ? `${exactHits} exact · ${correctOutcomes} correct outcome` : "Tournament not started yet"}</div>
         </div>
         <div className="stat-card" style={{ "--card-accent": "var(--muted)" }}>
           <div className="stat-card-icon">📝</div>
-          <div className="stat-card-val">{totalPreds}</div>
+          <div className="stat-card-val" style={{ color: totalPreds > 0 ? "var(--text)" : "var(--muted)" }}>{totalPreds}</div>
           <div className="stat-card-label">Predictions Made</div>
           <div className="stat-card-sub">of {WC2026_FIXTURES.filter(f => !f.home.startsWith("TBD")).length} available</div>
         </div>
         <div className="stat-card" style={{ "--card-accent": "var(--green)" }}>
           <div className="stat-card-icon">✅</div>
-          <div className="stat-card-val" style={{ color: "var(--green)" }}>
-            {scoredFixtures.length > 0 ? Math.round(((exactHits + correctOutcomes) / scoredFixtures.length) * 100) : 0}%
+          <div className="stat-card-val" style={{ color: scoredFixtures.length > 0 ? "var(--green)" : "var(--muted)" }}>
+            {scoredFixtures.length > 0 ? `${Math.round(((exactHits + correctOutcomes) / scoredFixtures.length) * 100)}%` : "—"}
           </div>
           <div className="stat-card-label">Prediction Accuracy</div>
-          <div className="stat-card-sub">correct outcomes out of {scoredFixtures.length} played</div>
+          <div className="stat-card-sub">{scoredFixtures.length > 0 ? `correct outcomes out of ${scoredFixtures.length} played` : "Awaiting first results"}</div>
         </div>
         <div className="stat-card" style={{ "--card-accent": "var(--gold)" }}>
           <div className="stat-card-icon">🎯</div>
-          <div className="stat-card-val" style={{ color: "var(--gold)" }}>
-            {scoredFixtures.length > 0 ? Math.round((exactHits / scoredFixtures.length) * 100) : 0}%
+          <div className="stat-card-val" style={{ color: scoredFixtures.length > 0 ? "var(--gold)" : "var(--muted)" }}>
+            {scoredFixtures.length > 0 ? `${Math.round((exactHits / scoredFixtures.length) * 100)}%` : "—"}
           </div>
           <div className="stat-card-label">Exact Score Accuracy</div>
-          <div className="stat-card-sub">{exactHits} exact scores out of {scoredFixtures.length} played</div>
+          <div className="stat-card-sub">{scoredFixtures.length > 0 ? `${exactHits} exact scores out of ${scoredFixtures.length} played` : "Awaiting first results"}</div>
         </div>
       </div>
       {/* Upcoming matches */}
@@ -1808,7 +1808,10 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
 
 // ─── PREDICTIONS TAB ───────────────────────────────────────────────────────────
 function PredictionsTab({ user, leagueId, refresh }) {
-  const [stageFilter, setStageFilter] = useState("Group Stage");
+  // Default to "Today" if there are matches today, otherwise Group Stage
+  const initTodayStr = new Date(new Date().getTime() + 3 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const initHasToday = WC2026_FIXTURES.some(f => f.date === initTodayStr);
+  const [stageFilter, setStageFilter] = useState(initHasToday ? "Today" : "Group Stage");
 
   const leagues = storage.get("sc_leagues") || {};
   const league = leagues[leagueId];
@@ -1823,7 +1826,15 @@ function PredictionsTab({ user, leagueId, refresh }) {
     { label: "Group Stage", stages: ["Group Stage"] },
     { label: "Knockout", stages: ["Round of 32", "Round of 16", "Quarterfinal", "Semifinal", "Third Place", "Final"] },
   ];
-  const filtered = WC2026_FIXTURES.filter(f => f.stage === stageFilter);
+
+  // Today's date in YYYY-MM-DD (EEST — UTC+3)
+  const todayStr = new Date(new Date().getTime() + 3 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const todayFixtures = WC2026_FIXTURES.filter(f => f.date === todayStr);
+  const hasTodayMatches = todayFixtures.length > 0;
+
+  const filtered = stageFilter === "Today"
+    ? todayFixtures
+    : WC2026_FIXTURES.filter(f => f.stage === stageFilter);
 
   const twLocked = useTournamentWinnerLock();
 
@@ -1897,6 +1908,28 @@ function PredictionsTab({ user, leagueId, refresh }) {
       </div>
 
       <div className="stage-filter-wrap">
+        {/* Today pill — shown only on match days */}
+        {hasTodayMatches && (
+          <div className="stage-filter-group">
+            <div className="stage-filter-group-label">Today</div>
+            <div className="stage-filter-row">
+              <button
+                className={`filter-btn ${stageFilter === "Today" ? "active" : ""}`}
+                onClick={() => setStageFilter("Today")}
+                style={{
+                  borderColor: stageFilter === "Today" ? "var(--accent2)" : undefined,
+                  color: stageFilter === "Today" ? "var(--accent2)" : undefined,
+                  background: stageFilter === "Today" ? "rgba(244,63,94,0.08)" : undefined,
+                }}
+              >
+                ⚽ Today's Matches
+                <span style={{ marginLeft: 5, fontSize: 9, fontWeight: 700, opacity: 0.7 }}>
+                  {todayFixtures.filter(f => myPreds[f.id]?.homeGoals != null).length}/{todayFixtures.length}
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
         {stageGroups.map(group => (
           <div key={group.label} className="stage-filter-group">
             <div className="stage-filter-group-label">{group.label}</div>
