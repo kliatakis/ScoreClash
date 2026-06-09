@@ -3258,10 +3258,18 @@ export default function App() {
     const unsub = fbOnAuthChange(async (fbUser) => {
       if (fbUser && !loading) {
         // Always fetch fresh — cache may not be populated yet on page reload
-        const freshUsers = await fsGet("sc_users") || {};
-        const profile = freshUsers[fbUser.uid];
+        const [freshUsers, freshLeagues, freshPredictions, freshResults] = await Promise.all([
+          fsGet("sc_users"),
+          fsGet("sc_leagues"),
+          fsGet("sc_predictions"),
+          fsGet("sc_results"),
+        ]);
+        _cache["sc_users"] = freshUsers || {};
+        _cache["sc_leagues"] = freshLeagues || {};
+        _cache["sc_predictions"] = freshPredictions || {};
+        _cache["sc_results"] = freshResults || {};
+        const profile = (freshUsers || {})[fbUser.uid];
         if (profile) {
-          _cache["sc_users"] = freshUsers;
           setUser({ uid: fbUser.uid, username: profile.username, email: fbUser.email });
         }
       } else if (!fbUser) {
@@ -3291,11 +3299,19 @@ export default function App() {
     if (myLeagues.length === 1) setSelectedLeague(myLeagues[0].id);
   }, [user, loading, tick]);
 
-  const handleLogin = (u) => {
+  const handleLogin = async (u) => {
+    // Fetch all data fresh from Firestore before rendering
+    const [freshLeagues, freshPredictions, freshResults] = await Promise.all([
+      fsGet("sc_leagues"),
+      fsGet("sc_predictions"),
+      fsGet("sc_results"),
+    ]);
+    _cache["sc_leagues"] = freshLeagues || {};
+    _cache["sc_predictions"] = freshPredictions || {};
+    _cache["sc_results"] = freshResults || {};
     setUser(u);
     setTab("dashboard");
-    const leagues = storage.get("sc_leagues") || {};
-    const myLeagues = Object.values(leagues).filter(l => l.members.includes(u.uid));
+    const myLeagues = Object.values(freshLeagues || {}).filter(l => l.members.includes(u.uid));
     if (myLeagues.length === 1) setSelectedLeague(myLeagues[0].id);
   };
   const handleLogout = async () => { await fbLogout(); };
