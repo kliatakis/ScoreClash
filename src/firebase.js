@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot,
+  getFirestore,
+  doc, getDoc, setDoc, deleteDoc, onSnapshot,
+  updateDoc,
 } from "firebase/firestore";
 import {
   getAuth,
@@ -9,7 +11,6 @@ import {
   signOut,
   sendPasswordResetEmail,
   onAuthStateChanged,
-  updatePassword,
   EmailAuthProvider,
   reauthenticateWithCredential,
   deleteUser,
@@ -53,6 +54,26 @@ export function fsSubscribe(key, callback) {
   });
 }
 
+// ─── Atomic single-user write ─────────────────────────────────────────────────
+// Instead of reading the whole sc_users blob and rewriting it,
+// we use a separate /users/{uid} document so each user only writes their own.
+export async function fsWriteUser(uid, profile) {
+  await setDoc(doc(db, "users", uid), profile);
+}
+
+export async function fsReadUser(uid) {
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    return snap.exists() ? snap.data() : null;
+  } catch { return null; }
+}
+
+export function fsSubscribeUser(uid, callback) {
+  return onSnapshot(doc(db, "users", uid), snap => {
+    callback(snap.exists() ? snap.data() : null);
+  });
+}
+
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 export async function fbRegister(email, password) {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -75,7 +96,6 @@ export async function fbResetPassword(email) {
 export async function fbDeleteAccount(currentPassword) {
   const user = auth.currentUser;
   if (!user) throw new Error("No user logged in");
-  // Re-authenticate before deleting (Firebase requires this)
   const credential = EmailAuthProvider.credential(user.email, currentPassword);
   await reauthenticateWithCredential(user, credential);
   await deleteUser(user);
