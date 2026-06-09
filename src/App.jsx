@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { fsGet, fsSet, fsDel, fsSubscribe, fbRegister, fbLogin, fbLogout, fbResetPassword, fbDeleteAccount, fbOnAuthChange, auth } from "./firebase.js";
+import { fsGet, fsSet, fsDel, fsSubscribe, fsWriteUser, fsReadUser, fbRegister, fbLogin, fbLogout, fbResetPassword, fbDeleteAccount, fbOnAuthChange, auth } from "./firebase.js";
 
 // ─── DATA ──────────────────────────────────────────────────────────────────────
 
@@ -136,6 +136,14 @@ const storage = {
   set: async (k, v) => { _cache[k] = v; await fsSet(k, v); },
   del: async (k) => { delete _cache[k]; await fsDel(k); },
 };
+
+// Merge individual user docs into sc_users cache so display components
+// always have up-to-date user data regardless of blob write timing
+function mergeUserIntoCache(uid, profile) {
+  if (!_cache["sc_users"]) _cache["sc_users"] = {};
+  if (profile) _cache["sc_users"][uid] = profile;
+  else delete _cache["sc_users"][uid];
+}
 
 const STORE_KEYS = ["sc_users", "sc_leagues", "sc_predictions", "sc_results"];
 
@@ -2896,23 +2904,33 @@ function AuthPage({ onLogin }) {
     setLoading(true);
     try {
       if (mode === "register") {
-        // Check username uniqueness
-        const users = storage.get("sc_users") || {};
-        if (Object.values(users).find(u => u.username.toLowerCase() === username.trim().toLowerCase()))
+        // Check username uniqueness — fetch fresh to avoid stale cache
+        const freshUsers = await fsGet("sc_users") || {};
+        if (Object.values(freshUsers).find(u => u.username.toLowerCase() === username.trim().toLowerCase()))
           return setError("Username already taken. Please choose another.");
         const fbUser = await fbRegister(email.trim(), password);
         const uid = fbUser.uid;
-        users[uid] = { uid, username: username.trim(), email: email.trim() };
-        await storage.set("sc_users", users);
-        onLogin({ uid, username: username.trim(), email: email.trim() });
+        const profile = { uid, username: username.trim(), email: email.trim() };
+        // Write atomically to individual user doc — avoids overwrite race condition
+        await fsWriteUser(uid, profile);
+        // Also update the sc_users blob for backwards compatibility
+        freshUsers[uid] = profile;
+        await fsSet("sc_users", freshUsers);
+        _cache["sc_users"] = freshUsers;
+        mergeUserIntoCache(uid, profile);
+        onLogin(profile);
       } else {
         const fbUser = await fbLogin(email.trim(), password);
-        // Always fetch fresh from Firestore — cache may not be loaded yet
-        const freshUsers = await fsGet("sc_users") || {};
-        const profile = freshUsers[fbUser.uid];
+        // Try reading from individual user doc first (new atomic approach)
+        let profile = await fsReadUser(fbUser.uid);
+        if (!profile) {
+          // Fall back to sc_users blob
+          const freshUsers = await fsGet("sc_users") || {};
+          profile = freshUsers[fbUser.uid];
+        }
         if (!profile) return setError("Account not found in database. Please register.");
-        // Populate cache with fresh data
-        _cache["sc_users"] = freshUsers;
+        _cache["sc_users"] = { ...(await fsGet("sc_users") || {}), [fbUser.uid]: profile };
+        mergeUserIntoCache(fbUser.uid, profile);
         onLogin({ uid: fbUser.uid, username: profile.username, email: fbUser.email });
       }
     } catch (e) {
@@ -3060,16 +3078,21 @@ function ProfileDropdown({ user, onLogout, onUpdate, darkMode, onToggleDark }) {
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
-    const allUsers = storage.get("sc_users") || {};
+  const handleSave = async () => {
+    const allUsers = await fsGet("sc_users") || {};
     const trimmed = newUsername.trim();
     if (trimmed && trimmed !== user.username) {
       const taken = Object.values(allUsers).find(u => u.uid !== user.uid && u.username.toLowerCase() === trimmed.toLowerCase());
       if (taken) { alert("Username already taken."); return; }
-      allUsers[user.uid].username = trimmed;
+      allUsers[user.uid] = { ...allUsers[user.uid], username: trimmed };
     }
-    if (selectedAvatar) allUsers[user.uid].avatar = selectedAvatar;
-    storage.set("sc_users", allUsers);
+    if (selectedAvatar) allUsers[user.uid] = { ...allUsers[user.uid], avatar: selectedAvatar };
+    const updatedProfile = allUsers[user.uid];
+    // Write atomically to individual doc + update blob
+    await fsWriteUser(user.uid, updatedProfile);
+    await fsSet("sc_users", allUsers);
+    _cache["sc_users"] = allUsers;
+    mergeUserIntoCache(user.uid, updatedProfile);
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
     onUpdate({ ...user, username: trimmed || user.username });
@@ -3280,19 +3303,25 @@ export default function App() {
   useEffect(() => {
     const unsub = fbOnAuthChange(async (fbUser) => {
       if (fbUser && !loading) {
-        // Always fetch fresh — cache may not be populated yet on page reload
-        const [freshUsers, freshLeagues, freshPredictions, freshResults] = await Promise.all([
-          fsGet("sc_users"),
-          fsGet("sc_leagues"),
-          fsGet("sc_predictions"),
-          fsGet("sc_results"),
-        ]);
-        _cache["sc_users"] = freshUsers || {};
-        _cache["sc_leagues"] = freshLeagues || {};
-        _cache["sc_predictions"] = freshPredictions || {};
-        _cache["sc_results"] = freshResults || {};
-        const profile = (freshUsers || {})[fbUser.uid];
+        // Try individual user doc first (atomic, no race condition)
+        let profile = await fsReadUser(fbUser.uid);
+        if (!profile) {
+          // Fall back to sc_users blob
+          const freshUsers = await fsGet("sc_users") || {};
+          profile = freshUsers[fbUser.uid];
+        }
         if (profile) {
+          // Merge into cache so display components (Avatar, leaderboard) work
+          mergeUserIntoCache(fbUser.uid, profile);
+          // Fetch all other data fresh too
+          const [freshLeagues, freshPredictions, freshResults] = await Promise.all([
+            fsGet("sc_leagues"),
+            fsGet("sc_predictions"),
+            fsGet("sc_results"),
+          ]);
+          _cache["sc_leagues"] = freshLeagues || {};
+          _cache["sc_predictions"] = freshPredictions || {};
+          _cache["sc_results"] = freshResults || {};
           setUser({ uid: fbUser.uid, username: profile.username, email: fbUser.email });
         }
       } else if (!fbUser) {
