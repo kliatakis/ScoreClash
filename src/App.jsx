@@ -670,8 +670,10 @@ const css = (dark = true) => `
   .form-label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; }
   .form-input, .form-select {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text); font-family: var(--font-body); font-size: 14px;
+    color: var(--text); font-family: var(--font-body); font-size: 16px;
     padding: 12px 14px; border-radius: 8px; outline: none; transition: border-color 0.2s;
+    min-height: 44px; /* iOS minimum tap target */
+    -webkit-appearance: none; /* Remove iOS styling */
   }
   .form-input:focus, .form-select:focus { border-color: var(--accent); }
   .form-select option { background: var(--surface2); }
@@ -1146,9 +1148,13 @@ const css = (dark = true) => `
 
   /* AUTH */
   .auth-wrap {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 16px;
     background: var(--bg);
     position: relative; overflow: hidden;
+    /* Allow scrolling on small phones when keyboard is open */
+    align-items: flex-start;
+    padding-top: max(24px, env(safe-area-inset-top));
   }
 
   /* Animated background grid */
@@ -1271,7 +1277,8 @@ const css = (dark = true) => `
     /* Modal */
     .modal { padding: 20px; }
     .modal-title { font-size: 22px; }
-    .auth-card { padding: 28px 20px; }
+    .auth-card { padding: 24px 20px; border-radius: 18px; margin: auto 0; }
+    .auth-wrap { padding-top: 16px; padding-bottom: 16px; }
 
     /* League expanded */
     .league-expanded-body { padding: 14px; }
@@ -2941,9 +2948,14 @@ function AuthPage({ onLogin }) {
                 placeholder={mode === "register" ? "At least 6 characters" : "Enter password"} />
             </div>
             {mode === "login" && (
-              <div style={{ textAlign: "right", marginTop: -8, marginBottom: 16 }}>
+              <div style={{ textAlign: "right", marginTop: -4, marginBottom: 16 }}>
                 <button
-                  style={{ background: "none", border: "none", color: "var(--accent)", fontSize: 12, cursor: "pointer", fontFamily: "var(--font-body)", fontWeight: 600 }}
+                  style={{
+                    background: "none", border: "none", color: "var(--accent)",
+                    fontSize: 13, cursor: "pointer", fontFamily: "var(--font-body)",
+                    fontWeight: 600, padding: "8px 0", minHeight: 44,
+                    display: "inline-flex", alignItems: "center",
+                  }}
                   onClick={() => { setMode("forgot"); setError(""); setInfo(""); }}
                 >Forgot password?</button>
               </div>
