@@ -137,15 +137,14 @@ const storage = {
   del: async (k) => { delete _cache[k]; await fsDel(k); },
 };
 
-// Merge individual user docs into sc_users cache so display components
-// always have up-to-date user data regardless of blob write timing
+// Keep sc_users cache in sync with individual user docs
 function mergeUserIntoCache(uid, profile) {
   if (!_cache["sc_users"]) _cache["sc_users"] = {};
   if (profile) _cache["sc_users"][uid] = profile;
   else delete _cache["sc_users"][uid];
 }
 
-const STORE_KEYS = ["sc_users", "sc_leagues", "sc_predictions", "sc_results"];
+const STORE_KEYS = ["sc_leagues", "sc_predictions", "sc_results"];
 
 function generateCode(len = 6) {
   return Math.random().toString(36).substring(2, 2 + len).toUpperCase();
@@ -205,7 +204,7 @@ function calcLeaderboard(leagueId, withMovement = false) {
       const twResult = results["tournament_winner"];
       if (twPred && twResult && twPred === twResult) pts += scoring.winnerPoints;
     }
-    return { uid, username: user?.username || uid, points: pts, exact, correct, total };
+    return { uid, username: user?.username || _cache["sc_users"]?.[uid]?.username || uid, points: pts, exact, correct, total };
   }).sort((a, b) => b.points - a.points || b.exact - a.exact);
 
   if (!withMovement) return entries;
@@ -3277,8 +3276,6 @@ export default function App() {
   useEffect(() => {
     let unsubs = [];
     const bootstrap = async () => {
-      // Load users from individual docs (no race condition)
-      // Load everything else from store blobs
       const [allUsers, leagues, predictions, results] = await Promise.all([
         fsGetAllUsers(),
         fsGet("sc_leagues"),
@@ -3291,15 +3288,13 @@ export default function App() {
       _cache["sc_results"] = results || {};
       setLoading(false);
 
-      // Subscribe to real-time updates
+      // Single subscription per data source — no mixing
       unsubs = [
-        // Users — subscribe to collection (each user is own doc)
         fsSubscribeUsers((users) => {
           _cache["sc_users"] = users || {};
           setTick(t => t + 1);
         }),
-        // Everything else — subscribe to store blobs
-        ...["sc_leagues", "sc_predictions", "sc_results"].map(k =>
+        ...STORE_KEYS.map(k =>
           fsSubscribe(k, (val) => {
             _cache[k] = val ?? {};
             setTick(t => t + 1);
@@ -3315,25 +3310,10 @@ export default function App() {
   useEffect(() => {
     const unsub = fbOnAuthChange(async (fbUser) => {
       if (fbUser && !loading) {
-        // Try individual user doc first (atomic, no race condition)
+        // Read user profile from individual doc — atomic, no race condition
         let profile = await fsReadUser(fbUser.uid);
-        if (!profile) {
-          // Fall back to sc_users blob
-          const freshUsers = await fsGet("sc_users") || {};
-          profile = freshUsers[fbUser.uid];
-        }
         if (profile) {
-          // Merge into cache so display components (Avatar, leaderboard) work
           mergeUserIntoCache(fbUser.uid, profile);
-          // Fetch all other data fresh too
-          const [freshLeagues, freshPredictions, freshResults] = await Promise.all([
-            fsGet("sc_leagues"),
-            fsGet("sc_predictions"),
-            fsGet("sc_results"),
-          ]);
-          _cache["sc_leagues"] = freshLeagues || {};
-          _cache["sc_predictions"] = freshPredictions || {};
-          _cache["sc_results"] = freshResults || {};
           setUser({ uid: fbUser.uid, username: profile.username, email: fbUser.email });
         }
       } else if (!fbUser) {
