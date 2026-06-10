@@ -898,11 +898,10 @@ const css = (dark = true) => `
 
   /* Predicted corner badge */
   .fixture-pred-corner {
-    position: absolute; top: 8px; right: 10px;
     font-size: 10px; font-weight: 700; color: var(--accent);
     background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
-    padding: 2px 8px; border-radius: 10px; z-index: 2;
-    pointer-events: none;
+    padding: 2px 8px; border-radius: 10px;
+    pointer-events: none; white-space: nowrap; flex-shrink: 0;
   }
 
   /* Date group header */
@@ -1416,9 +1415,18 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "8px 16px", background: "var(--surface2)",
         borderBottom: "1px solid var(--border)", fontSize: 11, color: "var(--muted)",
+        gap: 8,
       }}>
         <span>📍 {fixture.venue}</span>
-        <span>{fixture.date} · {fixture.time}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {hasPred && !hasResult && !isInProgress && (
+            <div className="fixture-pred-corner">✓ Predicted</div>
+          )}
+          {isInProgress && (
+            <div className="fixture-pred-corner" style={{ background: "rgba(244,63,94,0.15)", borderColor: "rgba(244,63,94,0.4)", color: "var(--accent2)" }}>⚽ Live</div>
+          )}
+          <span>{fixture.date} · {fixture.time}</span>
+        </div>
       </div>
 
       {/* Teams + inputs */}
