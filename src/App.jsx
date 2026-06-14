@@ -205,10 +205,11 @@ function calcLeaderboard(leagueId, withMovement = false) {
     if (league.settings?.tournamentWinnerBonus) {
       const twPred = (predictions[uid] || {})[leagueId]?.tournament_winner;
       const twResult = results["tournament_winner"];
-      if (twPred && twResult && twPred === twResult) pts += scoring.winnerPoints;
+      const correctWinner = twPred && twResult && twPred === twResult ? 1 : 0;
+      if (correctWinner) pts += scoring.winnerPoints;
     }
-    return { uid, username: user?.username || _cache["sc_users"]?.[uid]?.username || uid, points: pts, exact, correct, total };
-  }).sort((a, b) => b.points - a.points || b.exact - a.exact);
+    return { uid, username: user?.username || _cache["sc_users"]?.[uid]?.username || uid, points: pts, exact, correct, total, correctWinner: (predictions[uid] || {})[leagueId]?.tournament_winner && results["tournament_winner"] && (predictions[uid] || {})[leagueId]?.tournament_winner === results["tournament_winner"] ? 1 : 0 };
+  }).sort((a, b) => b.points - a.points || b.exact - a.exact || b.correctWinner - a.correctWinner);
 
   if (!withMovement) return entries;
 
