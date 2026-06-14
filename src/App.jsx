@@ -1275,6 +1275,45 @@ const css = (dark = true) => `
     background: var(--green) !important; color: #fff !important;
   }
 
+  /* See predictions panel */
+  .see-preds-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); border-radius: 6px; padding: 4px 10px;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    font-family: var(--font-body); transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .see-preds-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .see-preds-btn.open { border-color: var(--accent); color: var(--accent); background: rgba(59,130,246,0.06); }
+
+  .preds-panel {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    background: var(--surface2);
+    animation: panel-in 0.15s ease;
+  }
+  @keyframes panel-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .preds-panel-title {
+    font-size: 10px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+  }
+  .preds-panel-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .preds-panel-row:last-child { border-bottom: none; }
+  .preds-panel-name { flex: 1; font-weight: 500; }
+  .preds-panel-name.you { color: var(--accent2); font-weight: 700; }
+  .preds-panel-score { font-family: var(--font-display); font-size: 16px; min-width: 48px; text-align: center; }
+  .preds-panel-pts { font-size: 11px; font-weight: 700; min-width: 40px; text-align: right; }
+  .preds-panel-pts.exact { color: var(--gold); }
+  .preds-panel-pts.correct { color: var(--green); }
+  .preds-panel-pts.wrong { color: var(--muted); }
+
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
     20% { transform: translateX(-6px); }
@@ -1376,10 +1415,11 @@ function FixtureCountdown({ date, time }) {
 }
 
 // ─── RICH FIXTURE CARD ────────────────────────────────────────────────────────
-function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, scoring = DEFAULT_SCORING }) {
+function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, scoring = DEFAULT_SCORING, allPreds = {}, leagueMembers = [], currentUid = null }) {
   const [draftHome, setDraftHome] = useState(pred?.homeGoals != null ? String(pred.homeGoals) : "");
   const [draftAway, setDraftAway] = useState(pred?.awayGoals != null ? String(pred.awayGoals) : "");
   const [justSaved, setJustSaved] = useState(false);
+  const [showPreds, setShowPreds] = useState(false);
   const lockStatus = useFixtureLock(fixture.date, fixture.time);
 
   useEffect(() => {
@@ -1547,6 +1587,55 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
 
       {/* Countdown */}
       {showCountdown && !hasResult && !isLocked && <FixtureCountdown date={fixture.date} time={fixture.time} />}
+
+      {/* See predictions panel — only for finished matches */}
+      {hasResult && leagueMembers.length > 0 && (
+        <>
+          <div style={{ padding: "8px 16px 10px", borderTop: "1px solid var(--border)" }}>
+            <button
+              className={`see-preds-btn ${showPreds ? "open" : ""}`}
+              onClick={() => setShowPreds(s => !s)}
+            >
+              👥 {showPreds ? "Hide" : "See"} predictions ({leagueMembers.length})
+            </button>
+          </div>
+          {showPreds && (
+            <div className="preds-panel">
+              <div className="preds-panel-title">What everyone predicted</div>
+              {leagueMembers.map(uid => {
+                const users = storage.get("sc_users") || {};
+                const username = users[uid]?.username || uid;
+                const memberPred = (allPreds[uid] || {})[fixture.id];
+                const pts = calcMatchScore(memberPred, result, scoring);
+                const isExact = pts === scoring.exactPoints;
+                const isCorrect = pts === scoring.outcomePoints;
+                const isYou = uid === currentUid;
+                return (
+                  <div key={uid} className="preds-panel-row">
+                    <Avatar uid={uid} size={24} username={username} />
+                    <span className={`preds-panel-name ${isYou ? "you" : ""}`}>
+                      {isYou ? "⭐ You" : username}
+                    </span>
+                    {memberPred?.homeGoals != null ? (
+                      <>
+                        <span className="preds-panel-score">{memberPred.homeGoals}–{memberPred.awayGoals}</span>
+                        <span className={`preds-panel-pts ${isExact ? "exact" : isCorrect ? "correct" : "wrong"}`}>
+                          {isExact ? `🎯 ${pts}pts` : isCorrect ? `✅ ${pts}pt` : "❌ 0pts"}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="preds-panel-score" style={{ color: "var(--muted)", fontSize: 12 }}>—</span>
+                        <span className="preds-panel-pts wrong">No pick</span>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -2116,6 +2205,11 @@ function PredictionsTab({ user, leagueId, refresh }) {
               onSave={savePred}
               showCountdown={true}
               scoring={scoring}
+              allPreds={Object.fromEntries(
+                (league.members || []).map(uid => [uid, ((storage.get("sc_predictions") || {})[uid] || {})[leagueId] || {}])
+              )}
+              leagueMembers={league.members || []}
+              currentUid={user.uid}
             />
           ))}
         </div>
