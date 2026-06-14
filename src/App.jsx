@@ -26,7 +26,7 @@ const WC2026_FIXTURES = [
   { id: "gs5", group: "B", home: "Qatar", away: "Switzerland", date: "2026-06-13", time: "22:00 EEST", stage: "Group Stage", venue: "Santa Clara" },
   { id: "gs6", group: "C", home: "Brazil", away: "Morocco", date: "2026-06-14", time: "01:00 EEST", stage: "Group Stage", venue: "East Rutherford" },
   { id: "gs7", group: "C", home: "Haiti", away: "Scotland", date: "2026-06-14", time: "04:00 EEST", stage: "Group Stage", venue: "Foxborough" },
-  { id: "gs8", group: "D", home: "Australia", away: "Türkiye", date: "2026-06-15", time: "07:00 EEST", stage: "Group Stage", venue: "Vancouver" },
+  { id: "gs8", group: "D", home: "Australia", away: "Türkiye", date: "2026-06-14", time: "07:00 EEST", stage: "Group Stage", venue: "Vancouver" },
   { id: "gs9", group: "E", home: "Germany", away: "Curaçao", date: "2026-06-14", time: "20:00 EEST", stage: "Group Stage", venue: "Houston" },
   { id: "gs10", group: "F", home: "Netherlands", away: "Japan", date: "2026-06-14", time: "23:00 EEST", stage: "Group Stage", venue: "Arlington" },
   { id: "gs11", group: "E", home: "Ivory Coast", away: "Ecuador", date: "2026-06-15", time: "02:00 EEST", stage: "Group Stage", venue: "Philadelphia" },
@@ -34,11 +34,11 @@ const WC2026_FIXTURES = [
   { id: "gs13", group: "H", home: "Spain", away: "Cape Verde", date: "2026-06-15", time: "20:00 EEST", stage: "Group Stage", venue: "Atlanta" },
   { id: "gs14", group: "G", home: "Belgium", away: "Egypt", date: "2026-06-16", time: "01:00 EEST", stage: "Group Stage", venue: "Seattle" },
   { id: "gs15", group: "H", home: "Saudi Arabia", away: "Uruguay", date: "2026-06-16", time: "01:00 EEST", stage: "Group Stage", venue: "Miami Gardens" },
-  { id: "gs16", group: "G", home: "Iran", away: "New Zealand", date: "2026-06-17", time: "07:00 EEST", stage: "Group Stage", venue: "Inglewood" },
+  { id: "gs16", group: "G", home: "Iran", away: "New Zealand", date: "2026-06-16", time: "07:00 EEST", stage: "Group Stage", venue: "Inglewood" },
   { id: "gs17", group: "I", home: "France", away: "Senegal", date: "2026-06-16", time: "22:00 EEST", stage: "Group Stage", venue: "East Rutherford" },
   { id: "gs18", group: "I", home: "Iraq", away: "Norway", date: "2026-06-17", time: "01:00 EEST", stage: "Group Stage", venue: "Foxborough" },
   { id: "gs19", group: "J", home: "Argentina", away: "Algeria", date: "2026-06-17", time: "04:00 EEST", stage: "Group Stage", venue: "Kansas City" },
-  { id: "gs20", group: "J", home: "Austria", away: "Jordan", date: "2026-06-18", time: "07:00 EEST", stage: "Group Stage", venue: "Santa Clara" },
+  { id: "gs20", group: "J", home: "Austria", away: "Jordan", date: "2026-06-17", time: "07:00 EEST", stage: "Group Stage", venue: "Santa Clara" },
   { id: "gs21", group: "K", home: "Portugal", away: "DR Congo", date: "2026-06-17", time: "20:00 EEST", stage: "Group Stage", venue: "Houston" },
   { id: "gs22", group: "L", home: "England", away: "Croatia", date: "2026-06-17", time: "23:00 EEST", stage: "Group Stage", venue: "Arlington" },
   { id: "gs23", group: "L", home: "Ghana", away: "Panama", date: "2026-06-18", time: "02:00 EEST", stage: "Group Stage", venue: "Toronto" },
@@ -50,11 +50,11 @@ const WC2026_FIXTURES = [
   { id: "gs29", group: "D", home: "United States", away: "Australia", date: "2026-06-19", time: "22:00 EEST", stage: "Group Stage", venue: "Seattle" },
   { id: "gs30", group: "C", home: "Scotland", away: "Morocco", date: "2026-06-20", time: "01:00 EEST", stage: "Group Stage", venue: "Foxborough" },
   { id: "gs31", group: "C", home: "Brazil", away: "Haiti", date: "2026-06-20", time: "04:00 EEST", stage: "Group Stage", venue: "Philadelphia" },
-  { id: "gs32", group: "D", home: "Türkiye", away: "Paraguay", date: "2026-06-21", time: "07:00 EEST", stage: "Group Stage", venue: "Santa Clara" },
+  { id: "gs32", group: "D", home: "Türkiye", away: "Paraguay", date: "2026-06-20", time: "07:00 EEST", stage: "Group Stage", venue: "Santa Clara" },
   { id: "gs33", group: "F", home: "Netherlands", away: "Sweden", date: "2026-06-20", time: "20:00 EEST", stage: "Group Stage", venue: "Houston" },
   { id: "gs34", group: "E", home: "Germany", away: "Ivory Coast", date: "2026-06-20", time: "23:00 EEST", stage: "Group Stage", venue: "Toronto" },
   { id: "gs35", group: "E", home: "Ecuador", away: "Curaçao", date: "2026-06-21", time: "03:00 EEST", stage: "Group Stage", venue: "Kansas City" },
-  { id: "gs36", group: "F", home: "Tunisia", away: "Japan", date: "2026-06-22", time: "07:00 EEST", stage: "Group Stage", venue: "Monterrey" },
+  { id: "gs36", group: "F", home: "Tunisia", away: "Japan", date: "2026-06-21", time: "07:00 EEST", stage: "Group Stage", venue: "Monterrey" },
   { id: "gs37", group: "H", home: "Spain", away: "Saudi Arabia", date: "2026-06-21", time: "19:00 EEST", stage: "Group Stage", venue: "Atlanta" },
   { id: "gs38", group: "G", home: "Belgium", away: "Iran", date: "2026-06-21", time: "22:00 EEST", stage: "Group Stage", venue: "Inglewood" },
   { id: "gs39", group: "H", home: "Uruguay", away: "Cape Verde", date: "2026-06-22", time: "01:00 EEST", stage: "Group Stage", venue: "Miami Gardens" },
@@ -144,6 +144,9 @@ function mergeUserIntoCache(uid, profile) {
   else delete _cache["sc_users"][uid];
 }
 
+// In-memory leaderboard snapshots for movement arrows
+const _lbSnapshots = {};
+
 const STORE_KEYS = ["sc_leagues", "sc_predictions", "sc_results"];
 
 function generateCode(len = 6) {
@@ -209,9 +212,9 @@ function calcLeaderboard(leagueId, withMovement = false) {
 
   if (!withMovement) return entries;
 
-  // Compare against previous snapshot stored in sc_lb_prev_{leagueId}
+  // In-memory snapshot — persists for session, no Firestore needed
   const snapKey = `sc_lb_prev_${leagueId}`;
-  const prev = storage.get(snapKey) || {};
+  const prev = _lbSnapshots[snapKey] || {};
   entries.forEach((entry, i) => {
     const prevRank = prev[entry.uid];
     if (prevRank == null) { entry.movement = "new"; }
@@ -219,10 +222,9 @@ function calcLeaderboard(leagueId, withMovement = false) {
     else if (prevRank < i + 1) { entry.movement = "down"; entry.moveDiff = (i + 1) - prevRank; }
     else { entry.movement = "same"; }
   });
-  // Save current ranks as new snapshot
   const snap = {};
   entries.forEach((e, i) => { snap[e.uid] = i + 1; });
-  storage.set(snapKey, snap);
+  _lbSnapshots[snapKey] = snap;
 
   return entries;
 }
