@@ -1997,6 +1997,36 @@ function PredictionsTab({ user, leagueId, refresh }) {
         </div>
       </div>
 
+      {league.settings?.tournamentWinnerBonus && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="card-title" style={{ display: "flex", alignItems: "center" }}>
+            🏆 TOURNAMENT WINNER <span style={{ color: "var(--gold)", fontSize: 13, marginLeft: 8 }}>(+{scoring.winnerPoints} pts)</span>
+            {twLockBadge()}
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <select
+              className="form-select"
+              value={myPreds["tournament_winner"] || ""}
+              disabled={twLocked}
+              onChange={e => !twLocked && saveTournamentWinner(e.target.value)}
+              style={{ opacity: twLocked ? 0.5 : 1, cursor: twLocked ? "not-allowed" : "pointer" }}
+            >
+              <option value="">-- Select winner --</option>
+              {ALL_TEAMS.map(t => <option key={t} value={t}>{flag(t)} {t}</option>)}
+            </select>
+          </div>
+          {myPreds["tournament_winner"] && (
+            <p style={{ marginTop: 10, fontSize: 13, color: "var(--accent)" }}>
+              Your pick: {flag(myPreds["tournament_winner"])} {myPreds["tournament_winner"]}
+              {twLocked && <span style={{ marginLeft: 8, color: "var(--accent2)", fontSize: 11 }}>(locked)</span>}
+            </p>
+          )}
+          {twLocked && !myPreds["tournament_winner"] && (
+            <p style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>No prediction made before the deadline.</p>
+          )}
+        </div>
+      )}
+
       <div className="stage-filter-wrap">
         {/* Today pill — shown only on match days */}
         {hasTodayMatches && (
@@ -2066,36 +2096,6 @@ function PredictionsTab({ user, leagueId, refresh }) {
           {stageWithResult > 0 && <span className="pred-progress-stat"><span style={{ color: "var(--gold)" }}>{stageWithResult}</span> results in</span>}
         </div>
       </div>
-
-      {league.settings?.tournamentWinnerBonus && stageFilter === "Group Stage" && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div className="card-title" style={{ display: "flex", alignItems: "center" }}>
-            🏆 TOURNAMENT WINNER <span style={{ color: "var(--gold)", fontSize: 13, marginLeft: 8 }}>(+{scoring.winnerPoints} pts)</span>
-            {twLockBadge()}
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <select
-              className="form-select"
-              value={myPreds["tournament_winner"] || ""}
-              disabled={twLocked}
-              onChange={e => !twLocked && saveTournamentWinner(e.target.value)}
-              style={{ opacity: twLocked ? 0.5 : 1, cursor: twLocked ? "not-allowed" : "pointer" }}
-            >
-              <option value="">-- Select winner --</option>
-              {ALL_TEAMS.map(t => <option key={t} value={t}>{flag(t)} {t}</option>)}
-            </select>
-          </div>
-          {myPreds["tournament_winner"] && (
-            <p style={{ marginTop: 10, fontSize: 13, color: "var(--accent)" }}>
-              Your pick: {flag(myPreds["tournament_winner"])} {myPreds["tournament_winner"]}
-              {twLocked && <span style={{ marginLeft: 8, color: "var(--accent2)", fontSize: 11 }}>(locked)</span>}
-            </p>
-          )}
-          {twLocked && !myPreds["tournament_winner"] && (
-            <p style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>No prediction made before the deadline.</p>
-          )}
-        </div>
-      )}
 
       {/* Fixtures grouped by date */}
       {Object.entries(fixturesByDate).map(([date, fixtures]) => (
