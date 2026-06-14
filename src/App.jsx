@@ -1026,7 +1026,33 @@ const css = (dark = true) => `
   .result-score { font-family: var(--font-display); font-size: 19px; letter-spacing: 1px; }
   .result-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
 
-  /* Tab fade transition */
+  /* New results banner */
+  .new-results-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(59,130,246,0.08) 100%);
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: var(--r); padding: 12px 16px; margin-bottom: 16px;
+    animation: banner-slide-in 0.3s ease;
+  }
+  @keyframes banner-slide-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .new-results-banner-left { display: flex; align-items: center; gap: 10px; }
+  .new-results-banner-icon { font-size: 20px; }
+  .new-results-banner-text { font-size: 13px; font-weight: 600; color: var(--green); }
+  .new-results-banner-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .new-results-banner-btn {
+    background: var(--green); color: #fff; border: none;
+    border-radius: 6px; padding: 6px 14px; font-size: 12px;
+    font-weight: 700; cursor: pointer; font-family: var(--font-body);
+    transition: filter 0.15s; white-space: nowrap;
+  }
+  .new-results-banner-btn:hover { filter: brightness(1.1); }
+  .new-results-banner-dismiss {
+    background: none; border: none; color: var(--muted);
+    font-size: 16px; cursor: pointer; padding: 0 0 0 8px; line-height: 1;
+  }
   .tab-content {
     animation: tab-fade 0.15s ease;
   }
@@ -1637,6 +1663,22 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
   const results = storage.get("sc_results") || {};
   const scoring = getScoringSettings(league);
 
+  // ── New results banner ────────────────────────────────────────────────────
+  const [newResultsCount, setNewResultsCount] = useState(0);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    const currentCount = Object.keys(results).length;
+    const seenKey = `sc_seen_results_${leagueId}`;
+    const seenCount = parseInt(localStorage.getItem(seenKey) || "0");
+    const diff = currentCount - seenCount;
+    if (diff > 0 && seenCount > 0) {
+      setNewResultsCount(diff);
+    }
+    // Update seen count
+    localStorage.setItem(seenKey, String(currentCount));
+  }, [leagueId, Object.keys(results).length]);
+
   // Stats
   const totalPreds = Object.keys(myPreds).filter(k => k !== "tournament_winner" && myPreds[k]?.homeGoals != null).length;
   const scoredFixtures = WC2026_FIXTURES.filter(f => results[f.id] != null);
@@ -1680,6 +1722,27 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
 
   return (
     <>
+      {/* New results banner */}
+      {newResultsCount > 0 && !bannerDismissed && (
+        <div className="new-results-banner">
+          <div className="new-results-banner-left">
+            <span className="new-results-banner-icon">🎯</span>
+            <div>
+              <div className="new-results-banner-text">
+                {newResultsCount} new result{newResultsCount > 1 ? "s" : ""} since your last visit!
+              </div>
+              <div className="new-results-banner-sub">Check your points and standings</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button className="new-results-banner-btn" onClick={() => setTab("predictions")}>
+              View Points →
+            </button>
+            <button className="new-results-banner-dismiss" onClick={() => setBannerDismissed(true)}>✕</button>
+          </div>
+        </div>
+      )}
+
       {/* Hero */}
       <div className="dash-hero">
         <div className="dash-hero-bg" />
