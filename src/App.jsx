@@ -236,8 +236,8 @@ function useCountdown(targetDateStr, targetTimeStr) {
   useEffect(() => {
     const eestHour = parseInt(targetTimeStr?.split(":")[0] || "15");
     const eestMin = parseInt(targetTimeStr?.split(":")[1]?.split(" ")[0] || "0");
-    // Approximate: treat ET as UTC-4 (EDT)
-    const target = new Date(`${targetDateStr}T${String(eestHour - 3).padStart(2,"0")}:${String(eestMin).padStart(2,"0")}:00Z`);
+    // Use timezone offset notation to avoid negative hour arithmetic
+    const target = new Date(`${targetDateStr}T${String(eestHour).padStart(2,"0")}:${String(eestMin).padStart(2,"0")}:00+03:00`);
 
     const update = () => {
       const now = new Date();
@@ -263,7 +263,9 @@ const TOURNAMENT_START = new Date("2026-06-11T19:00:00Z"); // 22:00 EEST = 19:00
 function kickoffUTC(dateStr, timeStr) {
   const h = parseInt(timeStr?.split(":")[0] || "0");
   const m = parseInt(timeStr?.split(":")[1]?.split(" ")[0] || "0");
-  return new Date(`${dateStr}T${String(h - 3).padStart(2,"0")}:${String(m).padStart(2,"0")}:00Z`);
+  // Convert EEST (UTC+3) to UTC by subtracting 3 hours using proper date arithmetic
+  const eestDate = new Date(`${dateStr}T${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:00+03:00`);
+  return eestDate;
 }
 
 function useFixtureLock(dateStr, timeStr) {
@@ -1732,7 +1734,7 @@ function MiniMatchCard({ fixture, pred, onClick }) {
           : (() => {
               const eestHour = parseInt(fixture.time?.split(":")[0] || "15");
               const eestMin  = parseInt(fixture.time?.split(":")[1]?.split(" ")[0] || "0");
-              const kickoff = new Date(`${fixture.date}T${String(eestHour - 3).padStart(2,"0")}:${String(eestMin).padStart(2,"0")}:00Z`);
+              const kickoff = new Date(`${fixture.date}T${String(eestHour).padStart(2,"0")}:${String(eestMin).padStart(2,"0")}:00+03:00`);
               const hoursLeft = (kickoff - new Date()) / 3600000;
               if (hoursLeft > 0 && hoursLeft <= 24)
                 return <span className="deadline-badge" style={{ width: "100%", justifyContent: "center" }}>⚠️ Deadline in {Math.ceil(hoursLeft)}h — predict now!</span>;
