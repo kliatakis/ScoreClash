@@ -1987,10 +1987,7 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
 
 // ─── PREDICTIONS TAB ───────────────────────────────────────────────────────────
 function PredictionsTab({ user, leagueId, refresh }) {
-  // Default to "Today" if there are matches today, otherwise Group Stage
-  const initTodayStr = new Date(new Date().getTime() + 3 * 60 * 60 * 1000).toISOString().split("T")[0];
-  const initHasToday = WC2026_FIXTURES.some(f => f.date === initTodayStr);
-  const [stageFilter, setStageFilter] = useState(initHasToday ? "Today" : "Group Stage");
+  const [stageFilter, setStageFilter] = useState("Upcoming");
 
   const leagues = storage.get("sc_leagues") || {};
   const league = leagues[leagueId];
@@ -2011,9 +2008,23 @@ function PredictionsTab({ user, leagueId, refresh }) {
   const todayFixtures = WC2026_FIXTURES.filter(f => f.date === todayStr);
   const hasTodayMatches = todayFixtures.length > 0;
 
-  const filtered = stageFilter === "Today"
-    ? todayFixtures
-    : WC2026_FIXTURES.filter(f => f.stage === stageFilter);
+  // Upcoming: all fixtures without a result, sorted chronologically
+  const upcomingFixtures = WC2026_FIXTURES
+    .filter(f => !results[f.id])
+    .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+
+  // Completed: all fixtures with a result, sorted chronologically
+  const completedFixtures = WC2026_FIXTURES
+    .filter(f => results[f.id])
+    .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+
+  const filtered = stageFilter === "Upcoming"
+    ? upcomingFixtures
+    : stageFilter === "Completed"
+      ? completedFixtures
+      : stageFilter === "Today"
+        ? todayFixtures
+        : WC2026_FIXTURES.filter(f => f.stage === stageFilter);
 
   const twLocked = useTournamentWinnerLock();
 
@@ -2053,8 +2064,8 @@ function PredictionsTab({ user, leagueId, refresh }) {
     refresh();
   };
 
-  // Progress stats for current stage
-  const stageFixtures = WC2026_FIXTURES.filter(f => f.stage === stageFilter);
+  // Progress stats for current filter
+  const stageFixtures = filtered;
   const stagePredicted = stageFixtures.filter(f => myPreds[f.id]?.homeGoals != null).length;
   const stageLocked = stageFixtures.filter(f => {
     const kickoff = kickoffUTC(f.date, f.time);
@@ -2117,11 +2128,29 @@ function PredictionsTab({ user, leagueId, refresh }) {
       )}
 
       <div className="stage-filter-wrap">
-        {/* Today pill — shown only on match days */}
-        {hasTodayMatches && (
-          <div className="stage-filter-group">
-            <div className="stage-filter-group-label">Today</div>
-            <div className="stage-filter-row">
+        {/* Primary filters */}
+        <div className="stage-filter-group">
+          <div className="stage-filter-group-label">View</div>
+          <div className="stage-filter-row">
+            <button
+              className={`filter-btn ${stageFilter === "Upcoming" ? "active" : ""}`}
+              onClick={() => setStageFilter("Upcoming")}
+            >
+              📅 Upcoming
+              <span style={{ marginLeft: 5, fontSize: 9, fontWeight: 700, opacity: 0.7 }}>
+                {upcomingFixtures.filter(f => myPreds[f.id]?.homeGoals != null).length}/{upcomingFixtures.length}
+              </span>
+            </button>
+            <button
+              className={`filter-btn ${stageFilter === "Completed" ? "active" : ""}`}
+              onClick={() => setStageFilter("Completed")}
+            >
+              ✅ Completed
+              <span style={{ marginLeft: 5, fontSize: 9, fontWeight: 700, opacity: 0.7 }}>
+                {completedFixtures.length}
+              </span>
+            </button>
+            {hasTodayMatches && (
               <button
                 className={`filter-btn ${stageFilter === "Today" ? "active" : ""}`}
                 onClick={() => setStageFilter("Today")}
@@ -2131,14 +2160,15 @@ function PredictionsTab({ user, leagueId, refresh }) {
                   background: stageFilter === "Today" ? "rgba(244,63,94,0.08)" : undefined,
                 }}
               >
-                ⚽ Today's Matches
+                ⚽ Today
                 <span style={{ marginLeft: 5, fontSize: 9, fontWeight: 700, opacity: 0.7 }}>
                   {todayFixtures.filter(f => myPreds[f.id]?.homeGoals != null).length}/{todayFixtures.length}
                 </span>
               </button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
+        {/* Stage filters — for drilling into specific stages */}
         {stageGroups.map(group => (
           <div key={group.label} className="stage-filter-group">
             <div className="stage-filter-group-label">{group.label}</div>
@@ -2154,10 +2184,7 @@ function PredictionsTab({ user, leagueId, refresh }) {
                   >
                     {s}
                     {count > 0 && (
-                      <span style={{
-                        marginLeft: 5, fontSize: 9, fontWeight: 700,
-                        opacity: 0.7,
-                      }}>
+                      <span style={{ marginLeft: 5, fontSize: 9, fontWeight: 700, opacity: 0.7 }}>
                         {predicted}/{count}
                       </span>
                     )}
@@ -2172,7 +2199,9 @@ function PredictionsTab({ user, leagueId, refresh }) {
       {/* Progress bar */}
       <div className="pred-progress-wrap">
         <div className="pred-progress-row">
-          <span className="pred-progress-label">{stageFilter} Predictions</span>
+          <span className="pred-progress-label">
+            {stageFilter === "Upcoming" ? "Upcoming Fixtures" : stageFilter === "Completed" ? "Completed Fixtures" : stageFilter === "Today" ? "Today's Fixtures" : `${stageFilter} Predictions`}
+          </span>
           <span className="pred-progress-count">{stagePredicted} / {stageFixtures.length}</span>
         </div>
         <div className="pred-progress-bar-bg">
