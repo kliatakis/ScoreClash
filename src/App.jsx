@@ -1029,7 +1029,23 @@ const css = (dark = true) => `
   .result-score { font-family: var(--font-display); font-size: 19px; letter-spacing: 1px; }
   .result-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
 
-  /* New results banner */
+  /* Missing predictions warning banner */
+  .missing-preds-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(244,63,94,0.06) 100%);
+    border: 1px solid rgba(245,158,11,0.35);
+    border-radius: var(--r); padding: 12px 16px; margin-bottom: 12px;
+    animation: banner-slide-in 0.3s ease;
+  }
+  .missing-preds-banner-text { font-size: 13px; font-weight: 600; color: var(--gold); }
+  .missing-preds-banner-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .missing-preds-banner-btn {
+    background: var(--gold); color: #000; border: none;
+    border-radius: 6px; padding: 6px 14px; font-size: 12px;
+    font-weight: 700; cursor: pointer; font-family: var(--font-body);
+    transition: filter 0.15s; white-space: nowrap;
+  }
+  .missing-preds-banner-btn:hover { filter: brightness(1.1); }
   .new-results-banner {
     display: flex; align-items: center; justify-content: space-between;
     background: linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(59,130,246,0.08) 100%);
@@ -1755,7 +1771,15 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
   const results = storage.get("sc_results") || {};
   const scoring = getScoringSettings(league);
 
-  // ── New results banner ────────────────────────────────────────────────────
+  // ── Missing predictions warning ───────────────────────────────────────────
+  const missingSoon = leagueId ? WC2026_FIXTURES.filter(f => {
+    if (results[f.id]) return false; // already has result
+    if (myPreds[f.id]?.homeGoals != null) return false; // already predicted
+    const kickoff = kickoffUTC(f.date, f.time);
+    const lockAt = new Date(kickoff.getTime() - 3600000);
+    const hoursLeft = (lockAt - new Date()) / 3600000;
+    return hoursLeft > 0 && hoursLeft <= 24; // locking within 24 hours
+  }) : [];
   const [newResultsCount, setNewResultsCount] = useState(0);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
@@ -1832,6 +1856,27 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
             </button>
             <button className="new-results-banner-dismiss" onClick={() => setBannerDismissed(true)}>✕</button>
           </div>
+        </div>
+      )}
+
+      {/* Missing predictions warning */}
+      {missingSoon.length > 0 && (
+        <div className="missing-preds-banner">
+          <div className="new-results-banner-left">
+            <span className="new-results-banner-icon">⚠️</span>
+            <div>
+              <div className="missing-preds-banner-text">
+                {missingSoon.length} match{missingSoon.length > 1 ? "es" : ""} locking soon — no prediction yet!
+              </div>
+              <div className="missing-preds-banner-sub">
+                {missingSoon.slice(0, 2).map(f => `${f.home} vs ${f.away}`).join(" · ")}
+                {missingSoon.length > 2 ? ` · +${missingSoon.length - 2} more` : ""}
+              </div>
+            </div>
+          </div>
+          <button className="missing-preds-banner-btn" onClick={() => setTab("predictions")}>
+            Predict Now →
+          </button>
         </div>
       )}
 
