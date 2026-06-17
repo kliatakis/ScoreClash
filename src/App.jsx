@@ -1029,7 +1029,25 @@ const css = (dark = true) => `
   .result-score { font-family: var(--font-display); font-size: 19px; letter-spacing: 1px; }
   .result-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
 
-  /* Missing predictions warning banner */
+  /* Match card prediction status banner */
+  .match-card-status-banner {
+    text-align: center; font-size: 11px; font-weight: 700;
+    padding: 5px 0; letter-spacing: 0.3px;
+  }
+  .match-card-status-banner.predicted {
+    background: rgba(34,197,94,0.15); color: var(--green);
+  }
+  .match-card-status-banner.missing {
+    background: rgba(148,163,184,0.12); color: var(--muted);
+  }
+  .match-card-status-banner.urgent {
+    background: var(--accent2); color: #fff;
+    animation: status-flash 1s ease-in-out infinite;
+  }
+  @keyframes status-flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
   .missing-preds-banner {
     display: flex; align-items: center; justify-content: space-between;
     background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(244,63,94,0.06) 100%);
@@ -1685,6 +1703,10 @@ function MiniMatchCard({ fixture, pred, onClick }) {
             : undefined,
       }}
     >
+      {/* Prediction status banner */}
+      <div className={`match-card-status-banner ${hasPred ? "predicted" : isClosingSoon ? "urgent" : "missing"}`}>
+        {hasPred ? "✓ Predicted" : isClosingSoon ? "⚠️ Predict now!" : "No prediction yet"}
+      </div>
 
       {/* Group / stage bar */}
       <div className="match-card-group-bar">
@@ -1806,15 +1828,10 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
     else if (s === scoring.outcomePoints) correctOutcomes++;
   });
 
-  // Upcoming unplayed fixtures — unpredicted first, then by date, max 8
+  // Upcoming unplayed fixtures — chronological order, max 8
   const upcoming = WC2026_FIXTURES
     .filter(f => !results[f.id] && f.home !== "TBD" && !f.home.startsWith("TBD"))
-    .sort((a, b) => {
-      const aPred = myPreds[a.id]?.homeGoals != null;
-      const bPred = myPreds[b.id]?.homeGoals != null;
-      if (aPred !== bPred) return aPred ? 1 : -1; // unpredicted first
-      return new Date(a.date) - new Date(b.date);
-    })
+    .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
     .slice(0, 8);
 
   // Count unpredicted upcoming fixtures that aren't locked
@@ -1949,7 +1966,7 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
                 color: "#fff", background: "var(--accent2)",
                 padding: "2px 8px", borderRadius: 10,
               }}>
-                ⚠️ {unpredictedUrgent} closing soon
+                ⚠️ {unpredictedUrgent} need predictions
               </span>
             )}
           </span>
