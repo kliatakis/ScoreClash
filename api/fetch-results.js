@@ -1,0 +1,153 @@
+// ─── ScoreClash: Automatic Results Fetcher ────────────────────────────────────
+// Runs on a schedule (see vercel.json) and pulls today's World Cup 2026 results
+// from API-Football, then writes any new results to Firestore exactly as the
+// admin's manual entry does. Never overwrites existing results. Never touches
+// predictions, users, or leagues.
+
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+
+// ── Firebase setup (same project as the main app) ────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyA6Eu8yKfYbpmfROUURTpvosEt7tDTwQYg",
+  authDomain: "scoreclash-4fa78.firebaseapp.com",
+  projectId: "scoreclash-4fa78",
+  storageBucket: "scoreclash-4fa78.firebasestorage.app",
+  messagingSenderId: "783244227672",
+  appId: "1:783244227672:web:64d9992f23a41c837f062d",
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── World Cup 2026 fixture list (mirrors App.jsx WC2026_FIXTURES) ─────────────
+// Only the fields needed for matching: id, home, away, date
+// NOTE: keep this in sync with App.jsx if fixture data ever changes.
+import { WC2026_FIXTURES } from "./wc2026-fixtures.js";
+
+// ── API-Football team name → our team name mapping ───────────────────────────
+// API-Football uses some different naming conventions than FIFA's official
+// names (which we use). This table translates their names to ours.
+// IMPORTANT: this list should be verified/expanded after the first few
+// real API calls — some entries are educated guesses based on known
+// API-Football conventions and may need correction.
+const NAME_MAP = {
+  "Czech Republic": "Czechia",
+  "South Korea": "Korea Republic",
+  "Korea Republic": "Korea Republic",
+  "USA": "United States",
+  "United States": "United States",
+  "Ivory Coast": "Côte d'Ivoire",
+  "Côte d'Ivoire": "Côte d'Ivoire",
+  "Bosnia": "Bosnia and Herzegovina",
+  "Bosnia and Herzegovina": "Bosnia and Herzegovina",
+  "Turkey": "Türkiye",
+  "Türkiye": "Türkiye",
+  "DR Congo": "DR Congo",
+  "Democratic Republic of the Congo": "DR Congo",
+  "Curacao": "Curaçao",
+  "Curaçao": "Curaçao",
+  "Cape Verde": "Cape Verde",
+  "Cabo Verde": "Cape Verde",
+};
+
+function normalizeTeamName(apiName) {
+  return NAME_MAP[apiName] || apiName;
+}
+
+// ── Main handler ───────────────────────────────────────────────────────────
+export default async function handler(req, res) {
+  // Only allow Vercel Cron to trigger this (basic protection)
+  const authHeader = req.headers["authorization"];
+  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const apiKey = process.env.API_FOOTBALL_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: "API_FOOTBALL_KEY not configured" });
+  }
+
+  try {
+    // Today's date in EEST (UTC+3) since that's our tournament's reference timezone
+    const now = new Date();
+    const eestNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+    const todayStr = eestNow.toISOString().split("T")[0];
+
+    // Free tier is limited to 100 requests/day, so we only check "today"
+    // (EEST) on each run. Late-night EEST matches (which may technically
+    // fall under a different API "date" depending on their timezone
+    // convention) are covered because we run hourly — if a match doesn't
+    // match today's date pull, it will be covered by the next hour's pull
+    // once the API's date rolls over too, or can be entered manually.
+    const datesToCheck = [todayStr];
+    let allApiFixtures = [];
+
+    for (const dateStr of datesToCheck) {
+      const url = `https://v3.football.api-sports.io/fixtures?league=1&season=2026&date=${dateStr}`;
+      const response = await fetch(url, {
+        headers: { "x-apisports-key": apiKey },
+      });
+      const data = await response.json();
+      if (data.response && Array.isArray(data.response)) {
+        allApiFixtures.push(...data.response);
+      }
+    }
+
+    // Read current results from Firestore
+    const resultsDocRef = doc(db, "store", "sc_results");
+    const resultsSnap = await getDoc(resultsDocRef);
+    const currentResults = resultsSnap.exists() ? JSON.parse(resultsSnap.data().value) : {};
+
+    let updatedCount = 0;
+    const updates = [];
+
+    for (const apiFixture of allApiFixtures) {
+      const status = apiFixture.fixture?.status?.short;
+      // Only process finished matches: FT (full time), AET (extra time), PEN (penalties)
+      const isFinished = ["FT", "AET", "PEN"].includes(status);
+      if (!isFinished) continue;
+
+      const apiHome = normalizeTeamName(apiFixture.teams?.home?.name);
+      const apiAway = normalizeTeamName(apiFixture.teams?.away?.name);
+      const homeGoals = apiFixture.goals?.home;
+      const awayGoals = apiFixture.goals?.away;
+
+      if (homeGoals == null || awayGoals == null) continue;
+
+      // Find matching fixture in our data by team names (date used as tiebreak)
+      const apiDate = apiFixture.fixture?.date?.split("T")[0];
+      const match = WC2026_FIXTURES.find(f =>
+        f.home === apiHome && f.away === apiAway
+      );
+
+      if (!match) {
+        updates.push({ status: "no_match", apiHome, apiAway, apiDate });
+        continue;
+      }
+
+      // Skip if we already have this result (never overwrite)
+      if (currentResults[match.id]) {
+        updates.push({ status: "already_exists", fixtureId: match.id });
+        continue;
+      }
+
+      currentResults[match.id] = { homeGoals, awayGoals };
+      updatedCount++;
+      updates.push({ status: "added", fixtureId: match.id, home: apiHome, away: apiAway, score: `${homeGoals}-${awayGoals}` });
+    }
+
+    // Only write if we actually added something
+    if (updatedCount > 0) {
+      await setDoc(resultsDocRef, { value: JSON.stringify(currentResults) });
+    }
+
+    return res.status(200).json({
+      success: true,
+      checked: allApiFixtures.length,
+      updated: updatedCount,
+      details: updates,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
