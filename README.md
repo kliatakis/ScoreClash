@@ -1,7 +1,6 @@
 # ScoreClash ⚽
 
 FIFA World Cup 2026 Prediction League App
-PREDICT. COMPETE. WIN BRAGGING RIGHTS
 
 ## Deployment Guide
 
