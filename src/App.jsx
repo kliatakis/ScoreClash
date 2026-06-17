@@ -465,12 +465,23 @@ function getUserAvatar(uid) {
   return u.avatar || null;
 }
 
+// Simple hash function to derive a consistent hue from a username
+function usernameToHue(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % 360;
+}
+
 // Render avatar as a small circle element (React)
 function Avatar({ uid, size = 32, username }) {
   const users = storage.get("sc_users") || {};
   const u = users[uid];
   const av = u?.avatar;
-  const initials = (username || u?.username || "?").slice(0, 2).toUpperCase();
+  const name = username || u?.username || "?";
+  const initials = name.slice(0, 2).toUpperCase();
+  const hue = usernameToHue(name);
 
   const style = {
     width: size, height: size, borderRadius: "50%",
@@ -483,7 +494,15 @@ function Avatar({ uid, size = 32, username }) {
   };
 
   if (!av) {
-    return <div style={{ ...style, fontSize: size * 0.38, letterSpacing: "-0.5px", color: "var(--accent)" }}>{initials}</div>;
+    return (
+      <div style={{
+        ...style,
+        fontSize: size * 0.38, letterSpacing: "-0.5px",
+        background: `hsla(${hue}, 65%, 50%, 0.18)`,
+        border: `1.5px solid hsla(${hue}, 65%, 55%, 0.4)`,
+        color: `hsl(${hue}, 70%, 65%)`,
+      }}>{initials}</div>
+    );
   }
   if (av.type === "emoji") {
     return <div style={style}>{av.value}</div>;
@@ -840,6 +859,7 @@ const css = (dark = true) => `
     display: inline-flex; align-items: center; gap: 5px;
     font-size: 11px; font-weight: 600;
     padding: 3px 10px; border-radius: 6px;
+    font-variant-numeric: tabular-nums;
   }
   .lock-badge.locked {
     color: var(--accent2);
@@ -1026,6 +1046,11 @@ const css = (dark = true) => `
   }
 
   .result-box { text-align: center; min-width: 56px; }
+  .score-col-label {
+    font-size: 9px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.6px;
+    text-align: center; margin-bottom: 4px;
+  }
   .result-score { font-family: var(--font-display); font-size: 19px; letter-spacing: 1px; }
   .result-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
 
@@ -1342,6 +1367,11 @@ const css = (dark = true) => `
     font-size: 13px;
   }
   .preds-panel-row:last-child { border-bottom: none; }
+  .preds-panel-row.winner-row {
+    background: linear-gradient(90deg, rgba(245,158,11,0.1), transparent);
+    border-radius: 6px; margin: 0 -8px; padding: 6px 8px;
+    border-bottom: 1px solid transparent;
+  }
   .preds-panel-name { flex: 1; font-weight: 500; }
   .preds-panel-name.you { color: var(--accent2); font-weight: 700; }
   .preds-panel-score { font-family: var(--font-display); font-size: 16px; min-width: 48px; text-align: center; }
@@ -1567,26 +1597,29 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
         </div>
 
         <div className="fixture-pred">
-          <input
-            type="number" min="0" max="20" className="score-input"
-            value={draftHome}
-            disabled={isLocked}
-            placeholder="–"
-            onChange={e => setDraftHome(e.target.value)}
-          />
-          <span className="score-sep">–</span>
-          <input
-            type="number" min="0" max="20" className="score-input"
-            value={draftAway}
-            disabled={isLocked}
-            placeholder="–"
-            onChange={e => setDraftAway(e.target.value)}
-          />
+          {hasResult && <div className="score-col-label">Predicted</div>}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="number" min="0" max="20" className="score-input"
+              value={draftHome}
+              disabled={isLocked}
+              placeholder="–"
+              onChange={e => setDraftHome(e.target.value)}
+            />
+            <span className="score-sep">–</span>
+            <input
+              type="number" min="0" max="20" className="score-input"
+              value={draftAway}
+              disabled={isLocked}
+              placeholder="–"
+              onChange={e => setDraftAway(e.target.value)}
+            />
+          </div>
         </div>
 
         {hasResult && (
           <div className="result-box">
-            <div className="result-label">Result</div>
+            <div className="result-label">Final Score</div>
             <div className="result-score">{result.homeGoals}–{result.awayGoals}</div>
             <span className={`pts-badge ${pts === scoring.exactPoints ? "pts-3" : pts === 0 ? "pts-0" : ""}`}>{pts}pt{pts !== 1 ? "s" : ""}</span>
           </div>
@@ -1647,7 +1680,7 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
                 const isCorrect = pts === scoring.outcomePoints;
                 const isYou = uid === currentUid;
                 return (
-                  <div key={uid} className="preds-panel-row">
+                  <div key={uid} className={`preds-panel-row ${isExact ? "winner-row" : ""}`}>
                     <Avatar uid={uid} size={24} username={username} />
                     <span className={`preds-panel-name ${isYou ? "you" : ""}`}>
                       {isYou ? "⭐ You" : username}
