@@ -3,9 +3,16 @@
 // from API-Football, then writes any new results to Firestore exactly as the
 // admin's manual entry does. Never overwrites existing results. Never touches
 // predictions, users, or leagues.
+//
+// NOTE: written in CommonJS (require/module.exports) rather than ES modules
+// (import/export) because Vercel's default Node.js serverless function
+// runtime expects CommonJS unless the project is explicitly configured for
+// ESM functions. Using CommonJS here avoids deployment crashes regardless of
+// how the main Vite app is configured.
 
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+const { initializeApp } = require("firebase/app");
+const { getFirestore, doc, getDoc, setDoc } = require("firebase/firestore");
+const { WC2026_FIXTURES } = require("./wc2026-fixtures.js");
 
 // ── Firebase setup (same project as the main app) ────────────────────────────
 const firebaseConfig = {
@@ -18,11 +25,6 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-// ── World Cup 2026 fixture list (mirrors App.jsx WC2026_FIXTURES) ─────────────
-// Only the fields needed for matching: id, home, away, date
-// NOTE: keep this in sync with App.jsx if fixture data ever changes.
-import { WC2026_FIXTURES } from "./wc2026-fixtures.js";
 
 // ── API-Football team name → our team name mapping ───────────────────────────
 // API-Football uses some different naming conventions than FIFA's official
@@ -55,7 +57,7 @@ function normalizeTeamName(apiName) {
 }
 
 // ── Main handler ───────────────────────────────────────────────────────────
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Only allow Vercel Cron to trigger this (basic protection)
   const authHeader = req.headers["authorization"];
   if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -74,24 +76,13 @@ export default async function handler(req, res) {
     const todayStr = eestNow.toISOString().split("T")[0];
 
     // Free tier is limited to 100 requests/day, so we only check "today"
-    // (EEST) on each run. Late-night EEST matches (which may technically
-    // fall under a different API "date" depending on their timezone
-    // convention) are covered because we run hourly — if a match doesn't
-    // match today's date pull, it will be covered by the next hour's pull
-    // once the API's date rolls over too, or can be entered manually.
-    const datesToCheck = [todayStr];
-    let allApiFixtures = [];
-
-    for (const dateStr of datesToCheck) {
-      const url = `https://v3.football.api-sports.io/fixtures?league=1&season=2026&date=${dateStr}`;
-      const response = await fetch(url, {
-        headers: { "x-apisports-key": apiKey },
-      });
-      const data = await response.json();
-      if (data.response && Array.isArray(data.response)) {
-        allApiFixtures.push(...data.response);
-      }
-    }
+    // (EEST) on each run.
+    const url = `https://v3.football.api-sports.io/fixtures?league=1&season=2026&date=${todayStr}`;
+    const response = await fetch(url, {
+      headers: { "x-apisports-key": apiKey },
+    });
+    const data = await response.json();
+    const allApiFixtures = Array.isArray(data.response) ? data.response : [];
 
     // Read current results from Firestore
     const resultsDocRef = doc(db, "store", "sc_results");
@@ -114,7 +105,7 @@ export default async function handler(req, res) {
 
       if (homeGoals == null || awayGoals == null) continue;
 
-      // Find matching fixture in our data by team names (date used as tiebreak)
+      // Find matching fixture in our data by team names
       const apiDate = apiFixture.fixture?.date?.split("T")[0];
       const match = WC2026_FIXTURES.find(f =>
         f.home === apiHome && f.away === apiAway
@@ -148,6 +139,6 @@ export default async function handler(req, res) {
       details: updates,
     });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message, stack: error.stack });
   }
-}
+};
