@@ -2877,7 +2877,7 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
         </div>
       ) : (
         myLeagues.map(league => {
-          const lb = calcLeaderboard(league.id, true);
+          const lb = calcLeaderboard(league.id);
           const myEntry = lb.find(e => e.uid === user.uid);
           const myRank = lb.findIndex(e => e.uid === user.uid) + 1;
           const isOpen = expandedId === league.id;
@@ -2934,7 +2934,6 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                                 <th style={{ textAlign: "right" }}>Exact Score</th>
                                 <th style={{ textAlign: "right" }}>Outcome</th>
                                 <th style={{ textAlign: "right" }}>Points</th>
-                                <th style={{ textAlign: "center" }}>Form ▲▼</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -2957,11 +2956,10 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                                     <td className="lb-acc">{entry.exact}</td>
                                     <td className="lb-acc">{entry.correct}</td>
                                     <td className="lb-pts" style={{ fontSize: 16 }}>{entry.points}</td>
-                                    <td style={{ textAlign: "center" }}>{movementLabel(entry.movement, entry.moveDiff)}</td>
                                   </tr>
                                   {i === 2 && lb.length > 4 && (
                                     <tr key={`sep-${i}`}>
-                                      <td colSpan={6} style={{ padding: 0, borderBottom: "2px solid var(--border2)" }} />
+                                      <td colSpan={5} style={{ padding: 0, borderBottom: "2px solid var(--border2)" }} />
                                     </tr>
                                   )}
                                 </>
