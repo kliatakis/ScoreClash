@@ -58,9 +58,21 @@ function normalizeTeamName(apiName) {
 
 // ── Main handler ───────────────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
-  // Only allow Vercel Cron to trigger this (basic protection)
+  // Allow two ways to trigger this safely:
+  // 1. Vercel's Cron Jobs — authenticated via CRON_SECRET header
+  // 2. Manual trigger from inside the app itself — identified by the
+  //    ?manual=true query param + a same-origin Referer check. This isn't
+  //    bank-grade security, but it's appropriate for a private friends app:
+  //    it stops random internet bots from spamming the endpoint and burning
+  //    through the free API quota, without needing a full user-auth system
+  //    wired into a standalone serverless function.
   const authHeader = req.headers["authorization"];
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const isCronRequest = process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`;
+
+  const isManualRequest = req.query?.manual === "true" &&
+    (req.headers["referer"] || "").includes("score-clash.vercel.app");
+
+  if (!isCronRequest && !isManualRequest) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
