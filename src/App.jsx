@@ -1336,7 +1336,25 @@ const css = (dark = true) => `
     background: var(--green) !important; color: #fff !important;
   }
 
-  /* See predictions panel */
+  /* Fetch results debug panel */
+  .fetch-debug-panel {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--r2); padding: 12px 14px; margin-bottom: 12px;
+    font-size: 11px;
+  }
+  .fetch-debug-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 0; border-bottom: 1px solid var(--border);
+    font-family: monospace;
+  }
+  .fetch-debug-row:last-child { border-bottom: none; }
+  .fetch-debug-status {
+    font-weight: 700; min-width: 90px; flex-shrink: 0;
+    padding: 1px 6px; border-radius: 4px; text-align: center; font-size: 10px;
+  }
+  .fetch-debug-status.added { background: rgba(34,197,94,0.15); color: var(--green); }
+  .fetch-debug-status.already_exists { background: rgba(148,163,184,0.15); color: var(--muted); }
+  .fetch-debug-status.no_match { background: rgba(244,63,94,0.15); color: var(--accent2); }
   .see-preds-btn {
     background: none; border: 1px solid var(--border);
     color: var(--muted); border-radius: 6px; padding: 4px 10px;
@@ -2598,6 +2616,8 @@ function InlineAdminPanel({ user, league, leagueId, refresh, onLeagueDeleted }) 
   const [confirmAction, setConfirmAction] = useState(null); // { type: 'delete'|'kick', uid? }
   const [fetchingResults, setFetchingResults] = useState(false);
   const [fetchMsg, setFetchMsg] = useState("");
+  const [fetchDetails, setFetchDetails] = useState(null);
+  const [showFetchDebug, setShowFetchDebug] = useState(false);
   const scoring = getScoringSettings(league);
   const [draftScoring, setDraftScoring] = useState({ ...scoring });
 
@@ -2607,6 +2627,7 @@ function InlineAdminPanel({ user, league, leagueId, refresh, onLeagueDeleted }) 
     try {
       const res = await fetch("/api/fetch-results?manual=true");
       const data = await res.json();
+      setFetchDetails(data);
       if (data.success) {
         if (data.updated > 0) {
           setFetchMsg(`✅ ${data.updated} new result${data.updated > 1 ? "s" : ""} added!`);
@@ -2619,6 +2640,7 @@ function InlineAdminPanel({ user, league, leagueId, refresh, onLeagueDeleted }) 
       }
     } catch (e) {
       setFetchMsg("⚠️ Could not reach the results service.");
+      setFetchDetails({ success: false, error: "Network error — could not reach the endpoint." });
     } finally {
       setFetchingResults(false);
       setTimeout(() => setFetchMsg(""), 5000);
@@ -2815,8 +2837,46 @@ function InlineAdminPanel({ user, league, leagueId, refresh, onLeagueDeleted }) 
           </button>
         </div>
         {fetchMsg && (
-          <div style={{ fontSize: 12, marginBottom: 10, color: fetchMsg.startsWith("✅") ? "var(--green)" : fetchMsg.startsWith("⚠️") ? "var(--accent2)" : "var(--muted)" }}>
-            {fetchMsg}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <span style={{ fontSize: 12, color: fetchMsg.startsWith("✅") ? "var(--green)" : fetchMsg.startsWith("⚠️") ? "var(--accent2)" : "var(--muted)" }}>
+              {fetchMsg}
+            </span>
+            {fetchDetails && (
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ fontSize: 10, padding: "2px 8px" }}
+                onClick={() => setShowFetchDebug(s => !s)}
+              >
+                {showFetchDebug ? "Hide details" : "Show details"}
+              </button>
+            )}
+          </div>
+        )}
+        {showFetchDebug && fetchDetails && (
+          <div className="fetch-debug-panel">
+            {fetchDetails.error && (
+              <div style={{ color: "var(--accent2)", marginBottom: 8 }}>Error: {fetchDetails.error}</div>
+            )}
+            {fetchDetails.checked != null && (
+              <div style={{ color: "var(--muted)", marginBottom: 8 }}>
+                Checked {fetchDetails.checked} fixture{fetchDetails.checked !== 1 ? "s" : ""} from the API today.
+              </div>
+            )}
+            {fetchDetails.details && fetchDetails.details.length === 0 && (
+              <div style={{ color: "var(--muted)" }}>No finished matches found for today yet.</div>
+            )}
+            {fetchDetails.details?.map((d, i) => (
+              <div key={i} className="fetch-debug-row">
+                <span className={`fetch-debug-status ${d.status}`}>{d.status.replace("_", " ")}</span>
+                {d.status === "no_match" ? (
+                  <span style={{ color: "var(--muted)" }}>{d.apiHome} vs {d.apiAway} ({d.apiDate}) — name didn't match any fixture</span>
+                ) : d.status === "added" ? (
+                  <span style={{ color: "var(--text)" }}>{d.fixtureId}: {d.home} {d.score} {d.away}</span>
+                ) : (
+                  <span style={{ color: "var(--muted)" }}>{d.fixtureId} already has a result</span>
+                )}
+              </div>
+            ))}
           </div>
         )}
         <div className="filter-row">
