@@ -2596,8 +2596,34 @@ function InlineAdminPanel({ user, league, leagueId, refresh, onLeagueDeleted }) 
   const [msg, setMsg] = useState("");
   const [scoringError, setScoringError] = useState("");
   const [confirmAction, setConfirmAction] = useState(null); // { type: 'delete'|'kick', uid? }
+  const [fetchingResults, setFetchingResults] = useState(false);
+  const [fetchMsg, setFetchMsg] = useState("");
   const scoring = getScoringSettings(league);
   const [draftScoring, setDraftScoring] = useState({ ...scoring });
+
+  const fetchLatestResults = async () => {
+    setFetchingResults(true);
+    setFetchMsg("");
+    try {
+      const res = await fetch("/api/fetch-results?manual=true");
+      const data = await res.json();
+      if (data.success) {
+        if (data.updated > 0) {
+          setFetchMsg(`✅ ${data.updated} new result${data.updated > 1 ? "s" : ""} added!`);
+          refresh();
+        } else {
+          setFetchMsg("ℹ️ No new finished matches found.");
+        }
+      } else {
+        setFetchMsg(`⚠️ ${data.error || "Something went wrong."}`);
+      }
+    } catch (e) {
+      setFetchMsg("⚠️ Could not reach the results service.");
+    } finally {
+      setFetchingResults(false);
+      setTimeout(() => setFetchMsg(""), 5000);
+    }
+  };
 
   const results = storage.get("sc_results") || {};
   const users = storage.get("sc_users") || {};
@@ -2777,7 +2803,22 @@ function InlineAdminPanel({ user, league, leagueId, refresh, onLeagueDeleted }) 
 
       {/* Enter Results */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 12 }}>Enter Results</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.8px" }}>Enter Results</div>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={fetchLatestResults}
+            disabled={fetchingResults}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            {fetchingResults ? "Fetching..." : "🔄 Fetch Latest Results"}
+          </button>
+        </div>
+        {fetchMsg && (
+          <div style={{ fontSize: 12, marginBottom: 10, color: fetchMsg.startsWith("✅") ? "var(--green)" : fetchMsg.startsWith("⚠️") ? "var(--accent2)" : "var(--muted)" }}>
+            {fetchMsg}
+          </div>
+        )}
         <div className="filter-row">
           {stages.map(s => (
             <button key={s} className={`filter-btn ${stageFilter === s ? "active" : ""}`} onClick={() => setStageFilter(s)}>{s}</button>
