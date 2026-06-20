@@ -1103,6 +1103,28 @@ const css = (dark = true) => `
     flex-shrink: 0;
   }
 
+  /* Nobody-got-it-right upset banner */
+  .upset-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, rgba(139,92,246,0.16) 0%, rgba(59,130,246,0.1) 100%);
+    border: 1.5px solid rgba(139,92,246,0.4);
+    border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px;
+    animation: banner-slide-in 0.3s ease;
+  }
+  .upset-banner-icon {
+    font-size: 24px; flex-shrink: 0;
+    animation: upset-shake 2.2s ease-in-out infinite;
+  }
+  @keyframes upset-shake {
+    0%, 80%, 100% { transform: rotate(0deg); }
+    82% { transform: rotate(-8deg); }
+    86% { transform: rotate(8deg); }
+    90% { transform: rotate(-5deg); }
+    94% { transform: rotate(0deg); }
+  }
+  .upset-banner-text { font-size: 14px; font-weight: 700; color: #a78bfa; }
+  .upset-banner-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
   .missing-preds-banner {
     display: flex; align-items: center; justify-content: space-between;
     background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(244,63,94,0.06) 100%);
@@ -1959,6 +1981,67 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
     computeHighlights();
   }, [leagueId, Object.keys(results).length]);
 
+  // ── Highlight: nobody in the league predicted the correct outcome ─────────
+  const [upsetPick, setUpsetPick] = useState(null);
+  useEffect(() => {
+    if (!leagueId || !league) return;
+
+    const computeUpsets = () => {
+      const seenKey = `sc_seen_upsets_${leagueId}`;
+      const seenIds = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
+      const newUpsets = [];
+      const members = league.members || [];
+      // Require at least 3 members with a prediction for this to feel
+      // meaningful — a 1-2 person "upset" isn't really a story.
+      const minPredictors = 3;
+
+      for (const fid of Object.keys(results)) {
+        const result = results[fid];
+        if (!result || result.homeGoals == null || result.awayGoals == null) continue;
+
+        const fixture = WC2026_FIXTURES.find(f => f.id === fid);
+        if (!fixture) continue;
+
+        const realOutcome = result.homeGoals > result.awayGoals ? "H"
+          : result.awayGoals > result.homeGoals ? "A" : "D";
+
+        let predictorCount = 0;
+        let correctCount = 0;
+
+        for (const memberUid of members) {
+          const memberPred = ((allPreds[memberUid] || {})[leagueId] || {})[fid];
+          if (!memberPred || memberPred.homeGoals == null) continue;
+          predictorCount++;
+          const predOutcome = memberPred.homeGoals > memberPred.awayGoals ? "H"
+            : memberPred.awayGoals > memberPred.homeGoals ? "A" : "D";
+          if (predOutcome === realOutcome) correctCount++;
+        }
+
+        if (predictorCount < minPredictors) continue;
+        if (correctCount > 0) continue; // someone got it — not a clean upset
+
+        const upsetId = fid;
+        if (seenIds.has(upsetId)) continue;
+
+        newUpsets.push({
+          id: upsetId,
+          fixture,
+          score: `${result.homeGoals}-${result.awayGoals}`,
+          predictorCount,
+          leagueName: league.name,
+        });
+      }
+
+      if (newUpsets.length > 0) {
+        setUpsetPick(newUpsets[0]);
+        const allSeen = [...seenIds, ...newUpsets.map(u => u.id)];
+        localStorage.setItem(seenKey, JSON.stringify(allSeen));
+      }
+    };
+
+    computeUpsets();
+  }, [leagueId, Object.keys(results).length]);
+
   // Stats
   const totalPreds = Object.keys(myPreds).filter(k => k !== "tournament_winner" && myPreds[k]?.homeGoals != null).length;
   const scoredFixtures = WC2026_FIXTURES.filter(f => results[f.id] != null);
@@ -2012,6 +2095,24 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
             </div>
           </div>
           <button className="highlight-pick-dismiss" onClick={() => setHighlightPick(null)}>✕</button>
+        </div>
+      )}
+
+      {/* Nobody got it right upset */}
+      {upsetPick && (
+        <div className="upset-banner">
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span className="upset-banner-icon">💩</span>
+            <div>
+              <div className="upset-banner-text">
+                Nobody saw that coming! {upsetPick.fixture.home} {upsetPick.score} {upsetPick.fixture.away}
+              </div>
+              <div className="upset-banner-sub">
+                {upsetPick.leagueName} · All {upsetPick.predictorCount} predictions missed this one
+              </div>
+            </div>
+          </div>
+          <button className="highlight-pick-dismiss" onClick={() => setUpsetPick(null)}>✕</button>
         </div>
       )}
 
