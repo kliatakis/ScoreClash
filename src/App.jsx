@@ -3163,36 +3163,39 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
   const [expandedTab, setExpandedTab] = useState("standings");
   const [leaveConfirm, setLeaveConfirm] = useState(null);
   const [roastText, setRoastText] = useState(null);
-  const [roastLoading, setRoastLoading] = useState(false);
-  const [roastError, setRoastError] = useState("");
+  const [lastRoastIdx, setLastRoastIdx] = useState(-1);
 
-  const generateRoast = async (lastPlaceEntry, secondLastPoints) => {
-    setRoastLoading(true);
-    setRoastError("");
-    setRoastText(null);
-    try {
-      const res = await fetch("/api/roast", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: lastPlaceEntry.username,
-          points: lastPlaceEntry.points,
-          rank: "last",
-          totalPlayers: undefined,
-          pointsBehindNext: secondLastPoints != null ? secondLastPoints - lastPlaceEntry.points : null,
-        }),
-      });
-      const data = await res.json();
-      if (data.roast) {
-        setRoastText(data.roast);
-      } else {
-        setRoastError(data.error || "Couldn't generate a roast right now.");
-      }
-    } catch (e) {
-      setRoastError("Couldn't reach the roast service.");
-    } finally {
-      setRoastLoading(false);
-    }
+  const generateRoast = (lastPlaceEntry, secondLastPoints) => {
+    const name = lastPlaceEntry.username;
+    const pts = lastPlaceEntry.points;
+    const gap = secondLastPoints != null ? secondLastPoints - lastPlaceEntry.points : null;
+
+    const templates = [
+      `${name}, dead last with ${pts} points. Even a coin flip would've done better.`,
+      `${gap != null ? `${gap} points behind 2nd-to-last. ${name}, that's not a gap, that's a canyon.` : `${name} is rock bottom. Football clearly isn't your sport — maybe try competitive napping.`}`,
+      `${name} predicting scores is like watching someone play darts with their eyes closed. In the dark. Underwater.`,
+      `Last place, ${pts} points. ${name}, did you even watch the matches or just vibe-guess every score?`,
+      `${name} is so far behind, the other players forgot they're even in a competition with you.`,
+      `Congratulations ${name}, you've achieved something special: being statistically worse than random guessing.`,
+      `${name}'s predictions have the accuracy of a broken clock — except the clock is right twice a day, and you're not.`,
+      `Bottom of the table, ${pts} points. ${name}, maybe football just isn't for you. Have you tried chess?`,
+      `${name}, your World Cup knowledge peaked at "the ball is round." Last place confirmed.`,
+      `Somewhere, a goat is making better predictions than ${name}. With ${pts} points, that's not even an insult, it's a fact.`,
+      `${name} really said "trust me" before every single wrong prediction. Bold strategy.`,
+      `Last place with ${pts} points — ${name}, even your bracket has given up on you.`,
+      `${name}, watching you predict scores is like watching someone try to parallel park for the first time. Painful.`,
+      `${pts} points. ${name}, at this point we're rooting for you out of pity, not respect.`,
+      `${name} is in last place and somehow still confident. That confidence is doing a lot of heavy lifting.`,
+    ];
+
+    // Pick a different one than last time if possible
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * templates.length);
+    } while (templates.length > 1 && idx === lastRoastIdx);
+
+    setLastRoastIdx(idx);
+    setRoastText(templates[idx]);
   };
 
   // Refresh users cache when this tab mounts so usernames always show correctly
@@ -3359,7 +3362,6 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={() => generateRoast(lb[lb.length - 1], lb[lb.length - 2]?.points)}
-                          disabled={roastLoading}
                           style={{
                             display: "flex", alignItems: "center", gap: 6,
                             background: "rgba(244,63,94,0.08)",
@@ -3367,7 +3369,7 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                             color: "var(--accent2)",
                           }}
                         >
-                          {roastLoading ? "Cooking up something..." : "🔥 Roast Last Place"}
+                          🔥 Roast Last Place
                         </button>
                         {roastText && (
                           <div style={{
@@ -3387,9 +3389,6 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                               </button>
                             </div>
                           </div>
-                        )}
-                        {roastError && (
-                          <div style={{ marginTop: 8, fontSize: 12, color: "var(--accent2)" }}>{roastError}</div>
                         )}
                       </div>
                     )}
