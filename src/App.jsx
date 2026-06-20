@@ -1077,7 +1077,7 @@ const css = (dark = true) => `
     display: flex; align-items: center; justify-content: space-between;
     background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(244,63,94,0.06) 100%);
     border: 1px solid rgba(245,158,11,0.35);
-    border-radius: var(--r); padding: 12px 16px; margin-bottom: 12px;
+    border-radius: var(--r); padding: 12px 16px; margin-bottom: 16px;
     animation: banner-slide-in 0.3s ease;
   }
   .missing-preds-banner-text { font-size: 13px; font-weight: 600; color: var(--gold); }
@@ -1354,7 +1354,11 @@ const css = (dark = true) => `
   }
   .fetch-debug-status.added { background: rgba(34,197,94,0.15); color: var(--green); }
   .fetch-debug-status.already_exists { background: rgba(148,163,184,0.15); color: var(--muted); }
-  .fetch-debug-status.no_match { background: rgba(244,63,94,0.15); color: var(--accent2); }
+  .fetch-debug-status.no_match {
+    background: rgba(244,63,94,0.2); color: var(--accent2);
+    font-size: 11px; border: 1px solid rgba(244,63,94,0.4);
+    box-shadow: 0 0 0 1px rgba(244,63,94,0.1);
+  }
   .see-preds-btn {
     background: none; border: 1px solid var(--border);
     color: var(--muted); border-radius: 6px; padding: 4px 10px;
@@ -1699,7 +1703,7 @@ function RichFixtureCard({ fixture, pred, result, onSave, showCountdown = true, 
                 const isYou = uid === currentUid;
                 return (
                   <div key={uid} className={`preds-panel-row ${isExact ? "winner-row" : ""}`}>
-                    <Avatar uid={uid} size={24} username={username} />
+                    <Avatar uid={uid} size={28} username={username} />
                     <span className={`preds-panel-name ${isYou ? "you" : ""}`}>
                       {isYou ? "⭐ You" : username}
                     </span>
@@ -2828,10 +2832,16 @@ function InlineAdminPanel({ user, league, leagueId, refresh, onLeagueDeleted }) 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div style={{ fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.8px" }}>Enter Results</div>
           <button
-            className="btn btn-ghost btn-sm"
+            className="btn btn-sm"
             onClick={fetchLatestResults}
             disabled={fetchingResults}
-            style={{ display: "flex", alignItems: "center", gap: 6 }}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: "rgba(59,130,246,0.1)",
+              border: "1px solid rgba(59,130,246,0.35)",
+              color: "var(--accent)",
+              fontWeight: 600,
+            }}
           >
             {fetchingResults ? "Fetching..." : "🔄 Fetch Latest Results"}
           </button>
