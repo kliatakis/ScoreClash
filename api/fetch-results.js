@@ -4,33 +4,33 @@
 // admin's manual entry does. Never overwrites existing results. Never touches
 // predictions, users, or leagues.
 //
-// NOTE: written in ES module syntax (import/export) as a plain .js file
-// because:
-//   1. Vercel's /api router only recognizes .js, .mjs, or .ts as valid
-//      function entry-point extensions — .cjs is a valid helper file but
-//      is NOT routable directly, which is why an earlier version of this
-//      file (renamed to .cjs) returned 404 NOT_FOUND.
-//   2. This project's package.json has "type": "module", which means any
-//      plain .js file is parsed as ESM by Node — so import/export is the
-//      correct, compatible syntax here (the earlier CommonJS attempt
-//      crashed with "require is not defined in ES module scope" for
-//      exactly this reason).
+// Uses the Firebase ADMIN SDK (not the client SDK) because this is trusted
+// backend code, not a logged-in user's browser. Firestore's security rules
+// require request.auth != null for all reads/writes — the client SDK would
+// be rejected with "Missing or insufficient permissions" since this function
+// has no logged-in user. The Admin SDK authenticates via a service account
+// key instead, which Firestore rules don't apply to at all (by design — it's
+// meant for trusted server environments exactly like this one).
+//
+// This does NOT loosen security for regular users in any way — the existing
+// Firestore rules are completely unchanged, and only this backend function
+// (which only you control, via the Vercel environment variable) gets this
+// elevated access.
 
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 import { WC2026_FIXTURES } from "./wc2026-fixtures.js";
 
-// ── Firebase setup (same project as the main app) ────────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyA6Eu8yKfYbpmfROUURTpvosEt7tDTwQYg",
-  authDomain: "scoreclash-4fa78.firebaseapp.com",
-  projectId: "scoreclash-4fa78",
-  storageBucket: "scoreclash-4fa78.firebasestorage.app",
-  messagingSenderId: "783244227672",
-  appId: "1:783244227672:web:64d9992f23a41c837f062d",
-};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// ── Firebase Admin setup ──────────────────────────────────────────────────────
+// The service account key is stored as a Vercel environment variable
+// (FIREBASE_SERVICE_ACCOUNT_KEY) containing the full JSON key as a string.
+if (!getApps().length) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+  initializeApp({
+    credential: cert(serviceAccount),
+  });
+}
+const db = getFirestore();
 
 // ── API-Football team name → our team name mapping ───────────────────────────
 // API-Football uses some different naming conventions than FIFA's official
@@ -102,10 +102,10 @@ export default async function handler(req, res) {
     const data = await response.json();
     const allApiFixtures = Array.isArray(data.response) ? data.response : [];
 
-    // Read current results from Firestore
-    const resultsDocRef = doc(db, "store", "sc_results");
-    const resultsSnap = await getDoc(resultsDocRef);
-    const currentResults = resultsSnap.exists() ? JSON.parse(resultsSnap.data().value) : {};
+    // Read current results from Firestore (Admin SDK syntax)
+    const resultsDocRef = db.collection("store").doc("sc_results");
+    const resultsSnap = await resultsDocRef.get();
+    const currentResults = resultsSnap.exists ? JSON.parse(resultsSnap.data().value) : {};
 
     let updatedCount = 0;
     const updates = [];
@@ -147,7 +147,7 @@ export default async function handler(req, res) {
 
     // Only write if we actually added something
     if (updatedCount > 0) {
-      await setDoc(resultsDocRef, { value: JSON.stringify(currentResults) });
+      await resultsDocRef.set({ value: JSON.stringify(currentResults) });
     }
 
     return res.status(200).json({
