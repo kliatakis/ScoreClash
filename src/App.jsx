@@ -2899,21 +2899,23 @@ function InlineAdminPanel({ user, league, leagueId, refresh, onLeagueDeleted }) 
           const inp = resultInputs[f.id] || { home: existing?.homeGoals ?? "", away: existing?.awayGoals ?? "" };
           return (
             <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
-              <div style={{ flex: 1, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                <span>{f.home}</span>
-                <span style={{ color: "var(--muted)", fontSize: 10 }}>VS</span>
-                <span>{f.away}</span>
+              <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.home}</span>
+                <span style={{ color: "var(--muted)", fontSize: 10, flexShrink: 0 }}>VS</span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.away}</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                <input type="number" min="0" max="30" className="score-input" style={{ width: 38 }} value={inp.home}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, width: 168, justifyContent: "flex-end" }}>
+                <input type="number" min="0" max="30" className="score-input" style={{ width: 38, flexShrink: 0 }} value={inp.home}
                   onChange={e => setResultInputs(r => ({ ...r, [f.id]: { ...inp, home: e.target.value } }))} placeholder="0" />
-                <span style={{ color: "var(--muted)" }}>–</span>
-                <input type="number" min="0" max="30" className="score-input" style={{ width: 38 }} value={inp.away}
+                <span style={{ color: "var(--muted)", flexShrink: 0 }}>–</span>
+                <input type="number" min="0" max="30" className="score-input" style={{ width: 38, flexShrink: 0 }} value={inp.away}
                   onChange={e => setResultInputs(r => ({ ...r, [f.id]: { ...inp, away: e.target.value } }))} placeholder="0" />
-                <button className="btn btn-primary btn-sm" onClick={() => saveResult(f.id)}>Save</button>
-                {existing && <button className="btn btn-ghost btn-sm" onClick={() => clearResult(f.id)}>✕</button>}
+                <button className="btn btn-primary btn-sm" onClick={() => saveResult(f.id)} style={{ flexShrink: 0 }}>Save</button>
+                {existing && <button className="btn btn-ghost btn-sm" onClick={() => clearResult(f.id)} style={{ flexShrink: 0 }}>✕</button>}
               </div>
-              {existing && <span style={{ fontSize: 11, color: "var(--green)", flexShrink: 0 }}>✓ {existing.homeGoals}–{existing.awayGoals}</span>}
+              <span style={{ fontSize: 11, color: "var(--green)", flexShrink: 0, width: 48, textAlign: "right" }}>
+                {existing ? `✓ ${existing.homeGoals}–${existing.awayGoals}` : ""}
+              </span>
             </div>
           );
         })}
