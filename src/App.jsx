@@ -1073,6 +1073,36 @@ const css = (dark = true) => `
     0%, 100% { opacity: 1; }
     50% { opacity: 0.55; }
   }
+
+  /* Exact high-score prediction highlight banner */
+  .highlight-pick-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(244,63,94,0.12) 100%);
+    border: 1.5px solid rgba(249,115,22,0.5);
+    border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px;
+    animation: banner-slide-in 0.3s ease, highlight-glow 1.8s ease-in-out infinite;
+    position: relative; overflow: hidden;
+  }
+  @keyframes highlight-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(249,115,22,0); }
+    50% { box-shadow: 0 0 20px 2px rgba(249,115,22,0.25); }
+  }
+  .highlight-pick-flame {
+    font-size: 26px; flex-shrink: 0;
+    animation: flame-flicker 0.6s ease-in-out infinite alternate;
+  }
+  @keyframes flame-flicker {
+    from { transform: scale(1) rotate(-3deg); }
+    to   { transform: scale(1.12) rotate(3deg); }
+  }
+  .highlight-pick-text { font-size: 14px; font-weight: 700; color: #fb923c; }
+  .highlight-pick-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .highlight-pick-dismiss {
+    background: none; border: none; color: var(--muted);
+    font-size: 16px; cursor: pointer; padding: 0 0 0 8px; line-height: 1;
+    flex-shrink: 0;
+  }
+
   .missing-preds-banner {
     display: flex; align-items: center; justify-content: space-between;
     background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(244,63,94,0.06) 100%);
@@ -1872,6 +1902,52 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
     localStorage.setItem(seenKey, String(currentCount));
   }, [leagueId, Object.keys(results).length]);
 
+  // ── Highlight: exact prediction with 4+ total goals ───────────────────────
+  const [highlightPick, setHighlightPick] = useState(null);
+  useEffect(() => {
+    if (!leagueId || !league) return;
+    const seenKey = `sc_seen_highlights_${leagueId}`;
+    const seenIds = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
+    const newHighlights = [];
+
+    for (const fid of Object.keys(results)) {
+      const result = results[fid];
+      if (!result || result.homeGoals == null || result.awayGoals == null) continue;
+      const totalGoals = Number(result.homeGoals) + Number(result.awayGoals);
+      if (totalGoals < 4) continue; // threshold: 4+ combined goals
+
+      const fixture = WC2026_FIXTURES.find(f => f.id === fid);
+      if (!fixture) continue;
+
+      for (const memberUid of league.members || []) {
+        const memberPred = ((allPreds[memberUid] || {})[leagueId] || {})[fid];
+        if (!memberPred || memberPred.homeGoals == null) continue;
+        const isExact = Number(memberPred.homeGoals) === Number(result.homeGoals) &&
+          Number(memberPred.awayGoals) === Number(result.awayGoals);
+        if (!isExact) continue;
+
+        const highlightId = `${fid}:${memberUid}`;
+        if (seenIds.has(highlightId)) continue;
+
+        const users = storage.get("sc_users") || {};
+        newHighlights.push({
+          id: highlightId,
+          username: users[memberUid]?.username || "Someone",
+          isYou: memberUid === user.uid,
+          fixture,
+          score: `${result.homeGoals}-${result.awayGoals}`,
+        });
+      }
+    }
+
+    if (newHighlights.length > 0) {
+      setHighlightPick(newHighlights[0]); // show the first/most relevant one
+      // Mark all found highlights as seen so they don't repeat
+      const allSeen = [...seenIds, ...newHighlights.map(h => h.id)];
+      localStorage.setItem(seenKey, JSON.stringify(allSeen));
+    }
+  }, [leagueId, Object.keys(results).length]);
+
   // Stats
   const totalPreds = Object.keys(myPreds).filter(k => k !== "tournament_winner" && myPreds[k]?.homeGoals != null).length;
   const scoredFixtures = WC2026_FIXTURES.filter(f => results[f.id] != null);
@@ -1910,6 +1986,22 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
 
   return (
     <>
+      {/* Exact high-scoring prediction highlight */}
+      {highlightPick && (
+        <div className="highlight-pick-banner">
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span className="highlight-pick-flame">🔥</span>
+            <div>
+              <div className="highlight-pick-text">
+                {highlightPick.isYou ? "You" : highlightPick.username} called {highlightPick.fixture.home} {highlightPick.score} {highlightPick.fixture.away} EXACTLY!
+              </div>
+              <div className="highlight-pick-sub">An incredible exact prediction with {highlightPick.score.split("-").reduce((a, b) => Number(a) + Number(b), 0)} goals total 🎯</div>
+            </div>
+          </div>
+          <button className="highlight-pick-dismiss" onClick={() => setHighlightPick(null)}>✕</button>
+        </div>
+      )}
+
       {/* New results banner */}
       {newResultsCount > 0 && !bannerDismissed && (
         <div className="new-results-banner">
