@@ -1912,12 +1912,11 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
       const seenIds = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
       const newHighlights = [];
 
-      // Ensure we have fresh user data — cache may not be populated yet
-      let users = storage.get("sc_users") || {};
-      if (Object.keys(users).length === 0) {
-        users = await fsGetAllUsers();
-        _cache["sc_users"] = users;
-      }
+      // Always fetch fresh user data — the cache may be partially populated
+      // (e.g. has the current user but not every league member), and this
+      // effect only runs when results change, so the extra read is cheap.
+      const users = await fsGetAllUsers();
+      _cache["sc_users"] = users;
 
       for (const fid of Object.keys(results)) {
         const result = results[fid];
