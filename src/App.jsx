@@ -1906,46 +1906,58 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
   const [highlightPick, setHighlightPick] = useState(null);
   useEffect(() => {
     if (!leagueId || !league) return;
-    const seenKey = `sc_seen_highlights_${leagueId}`;
-    const seenIds = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
-    const newHighlights = [];
 
-    for (const fid of Object.keys(results)) {
-      const result = results[fid];
-      if (!result || result.homeGoals == null || result.awayGoals == null) continue;
-      const totalGoals = Number(result.homeGoals) + Number(result.awayGoals);
-      if (totalGoals < 4) continue; // threshold: 4+ combined goals
+    const computeHighlights = async () => {
+      const seenKey = `sc_seen_highlights_${leagueId}`;
+      const seenIds = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
+      const newHighlights = [];
 
-      const fixture = WC2026_FIXTURES.find(f => f.id === fid);
-      if (!fixture) continue;
-
-      for (const memberUid of league.members || []) {
-        const memberPred = ((allPreds[memberUid] || {})[leagueId] || {})[fid];
-        if (!memberPred || memberPred.homeGoals == null) continue;
-        const isExact = Number(memberPred.homeGoals) === Number(result.homeGoals) &&
-          Number(memberPred.awayGoals) === Number(result.awayGoals);
-        if (!isExact) continue;
-
-        const highlightId = `${fid}:${memberUid}`;
-        if (seenIds.has(highlightId)) continue;
-
-        const users = storage.get("sc_users") || {};
-        newHighlights.push({
-          id: highlightId,
-          username: users[memberUid]?.username || "Someone",
-          isYou: memberUid === user.uid,
-          fixture,
-          score: `${result.homeGoals}-${result.awayGoals}`,
-        });
+      // Ensure we have fresh user data — cache may not be populated yet
+      let users = storage.get("sc_users") || {};
+      if (Object.keys(users).length === 0) {
+        users = await fsGetAllUsers();
+        _cache["sc_users"] = users;
       }
-    }
 
-    if (newHighlights.length > 0) {
-      setHighlightPick(newHighlights[0]); // show the first/most relevant one
-      // Mark all found highlights as seen so they don't repeat
-      const allSeen = [...seenIds, ...newHighlights.map(h => h.id)];
-      localStorage.setItem(seenKey, JSON.stringify(allSeen));
-    }
+      for (const fid of Object.keys(results)) {
+        const result = results[fid];
+        if (!result || result.homeGoals == null || result.awayGoals == null) continue;
+        const totalGoals = Number(result.homeGoals) + Number(result.awayGoals);
+        if (totalGoals < 4) continue; // threshold: 4+ combined goals
+
+        const fixture = WC2026_FIXTURES.find(f => f.id === fid);
+        if (!fixture) continue;
+
+        for (const memberUid of league.members || []) {
+          const memberPred = ((allPreds[memberUid] || {})[leagueId] || {})[fid];
+          if (!memberPred || memberPred.homeGoals == null) continue;
+          const isExact = Number(memberPred.homeGoals) === Number(result.homeGoals) &&
+            Number(memberPred.awayGoals) === Number(result.awayGoals);
+          if (!isExact) continue;
+
+          const highlightId = `${fid}:${memberUid}`;
+          if (seenIds.has(highlightId)) continue;
+
+          newHighlights.push({
+            id: highlightId,
+            username: users[memberUid]?.username || "Someone",
+            isYou: memberUid === user.uid,
+            fixture,
+            score: `${result.homeGoals}-${result.awayGoals}`,
+            leagueName: league.name,
+          });
+        }
+      }
+
+      if (newHighlights.length > 0) {
+        setHighlightPick(newHighlights[0]); // show the first/most relevant one
+        // Mark all found highlights as seen so they don't repeat
+        const allSeen = [...seenIds, ...newHighlights.map(h => h.id)];
+        localStorage.setItem(seenKey, JSON.stringify(allSeen));
+      }
+    };
+
+    computeHighlights();
   }, [leagueId, Object.keys(results).length]);
 
   // Stats
@@ -1995,7 +2007,9 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
               <div className="highlight-pick-text">
                 {highlightPick.isYou ? "You" : highlightPick.username} called {highlightPick.fixture.home} {highlightPick.score} {highlightPick.fixture.away} EXACTLY!
               </div>
-              <div className="highlight-pick-sub">An incredible exact prediction with {highlightPick.score.split("-").reduce((a, b) => Number(a) + Number(b), 0)} goals total 🎯</div>
+              <div className="highlight-pick-sub">
+                {highlightPick.leagueName} · An incredible exact prediction with {highlightPick.score.split("-").reduce((a, b) => Number(a) + Number(b), 0)} goals total 🎯
+              </div>
             </div>
           </div>
           <button className="highlight-pick-dismiss" onClick={() => setHighlightPick(null)}>✕</button>
