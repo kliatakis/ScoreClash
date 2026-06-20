@@ -3162,6 +3162,38 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
   const [expandedId, setExpandedId] = useState(selectedLeague || null);
   const [expandedTab, setExpandedTab] = useState("standings");
   const [leaveConfirm, setLeaveConfirm] = useState(null);
+  const [roastText, setRoastText] = useState(null);
+  const [roastLoading, setRoastLoading] = useState(false);
+  const [roastError, setRoastError] = useState("");
+
+  const generateRoast = async (lastPlaceEntry, secondLastPoints) => {
+    setRoastLoading(true);
+    setRoastError("");
+    setRoastText(null);
+    try {
+      const res = await fetch("/api/roast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: lastPlaceEntry.username,
+          points: lastPlaceEntry.points,
+          rank: "last",
+          totalPlayers: undefined,
+          pointsBehindNext: secondLastPoints != null ? secondLastPoints - lastPlaceEntry.points : null,
+        }),
+      });
+      const data = await res.json();
+      if (data.roast) {
+        setRoastText(data.roast);
+      } else {
+        setRoastError(data.error || "Couldn't generate a roast right now.");
+      }
+    } catch (e) {
+      setRoastError("Couldn't reach the roast service.");
+    } finally {
+      setRoastLoading(false);
+    }
+  };
 
   // Refresh users cache when this tab mounts so usernames always show correctly
   useEffect(() => {
@@ -3319,6 +3351,47 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                             </tbody>
                           </table>
                         )
+                    )}
+
+                    {/* Roast last place button — only with 4+ players */}
+                    {expandedTab === "standings" && lb.length >= 4 && (
+                      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => generateRoast(lb[lb.length - 1], lb[lb.length - 2]?.points)}
+                          disabled={roastLoading}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 6,
+                            background: "rgba(244,63,94,0.08)",
+                            border: "1px solid rgba(244,63,94,0.3)",
+                            color: "var(--accent2)",
+                          }}
+                        >
+                          {roastLoading ? "Cooking up something..." : "🔥 Roast Last Place"}
+                        </button>
+                        {roastText && (
+                          <div style={{
+                            marginTop: 10, padding: "12px 14px",
+                            background: "var(--surface2)", borderRadius: "var(--r2)",
+                            border: "1px solid var(--border)", fontSize: 13,
+                            fontStyle: "italic", color: "var(--text)",
+                          }}>
+                            "{roastText}"
+                            <div style={{ marginTop: 8 }}>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ fontSize: 11, padding: "2px 8px" }}
+                                onClick={() => generateRoast(lb[lb.length - 1], lb[lb.length - 2]?.points)}
+                              >
+                                🔄 Another one
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {roastError && (
+                          <div style={{ marginTop: 8, fontSize: 12, color: "var(--accent2)" }}>{roastError}</div>
+                        )}
+                      </div>
                     )}
 
                     {expandedTab === "info" && (
