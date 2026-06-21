@@ -100,6 +100,12 @@ export default async function handler(req, res) {
       headers: { "x-apisports-key": apiKey },
     });
     const data = await response.json();
+
+    // Surface any API-level errors/warnings instead of silently treating
+    // them as "no fixtures" — this is critical for debugging since an
+    // invalid key, rate limit, or wrong parameter all otherwise look
+    // identical to "no matches today" from the caller's perspective.
+    const apiErrors = data.errors && Object.keys(data.errors).length > 0 ? data.errors : null;
     const allApiFixtures = Array.isArray(data.response) ? data.response : [];
 
     // Read current results from Firestore (Admin SDK syntax)
@@ -155,6 +161,9 @@ export default async function handler(req, res) {
       checked: allApiFixtures.length,
       updated: updatedCount,
       details: updates,
+      apiErrors: apiErrors,
+      requestedDate: todayStr,
+      apiResultsCount: data.results,
     });
   } catch (error) {
     return res.status(500).json({ error: error.message, stack: error.stack });
