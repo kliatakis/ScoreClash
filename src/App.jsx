@@ -3073,6 +3073,16 @@ function InlineAdminPanel({ user, league, leagueId, refresh, onLeagueDeleted }) 
             {fetchDetails.error && (
               <div style={{ color: "var(--accent2)", marginBottom: 8 }}>Error: {fetchDetails.error}</div>
             )}
+            {fetchDetails.apiErrors && (
+              <div style={{ color: "var(--accent2)", marginBottom: 8, fontFamily: "monospace", fontSize: 11 }}>
+                API-Football returned an error: {JSON.stringify(fetchDetails.apiErrors)}
+              </div>
+            )}
+            {fetchDetails.requestedDate && (
+              <div style={{ color: "var(--muted)", marginBottom: 4, fontSize: 10 }}>
+                Requested date: {fetchDetails.requestedDate} · API reported {fetchDetails.apiResultsCount ?? "?"} total result(s)
+              </div>
+            )}
             {fetchDetails.checked != null && (
               <div style={{ color: "var(--muted)", marginBottom: 8 }}>
                 Checked {fetchDetails.checked} fixture{fetchDetails.checked !== 1 ? "s" : ""} from the API today.
