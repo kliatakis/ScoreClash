@@ -1125,6 +1125,21 @@ const css = (dark = true) => `
   .upset-banner-text { font-size: 14px; font-weight: 700; color: #a78bfa; }
   .upset-banner-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
+  /* Lone-miss roast banner — everyone got it right except one person */
+  .lonemiss-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, rgba(244,63,94,0.16) 0%, rgba(249,115,22,0.1) 100%);
+    border: 1.5px solid rgba(244,63,94,0.45);
+    border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px;
+    animation: banner-slide-in 0.3s ease;
+  }
+  .lonemiss-banner-icon {
+    font-size: 24px; flex-shrink: 0;
+    animation: upset-shake 2.2s ease-in-out infinite;
+  }
+  .lonemiss-banner-text { font-size: 14px; font-weight: 700; color: var(--accent2); }
+  .lonemiss-banner-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
   .missing-preds-banner {
     display: flex; align-items: center; justify-content: space-between;
     background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(244,63,94,0.06) 100%);
@@ -1892,6 +1907,24 @@ function MiniMatchCard({ fixture, pred, onClick }) {
 }
 
 // ─── DASHBOARD TAB ────────────────────────────────────────────────────────────
+// Generate a roast for the one person who missed an outcome everyone else got right
+function generateLoneMissRoast(name, predictorCount) {
+  const others = predictorCount - 1;
+  const templates = [
+    `${others} other people got this right. ${name} did not. Some people just weren't built for this.`,
+    `${name} really looked at this match and chose violence against their own standings.`,
+    `Everyone else nailed it. ${name} apparently predicted with their eyes closed.`,
+    `${name}, ${others} other people saw this coming and you didn't. That's not bad luck, that's a skill issue.`,
+    `The whole league called this one correctly except ${name}. Embarrassing, honestly.`,
+    `${name} is single-handedly keeping the "wrong predictions" category alive.`,
+    `${others}-for-${others} from everyone else. ${name} ruined the perfect streak. Typical.`,
+    `${name} missed the one outcome literally everyone else got. That takes a special kind of confidence.`,
+    `Somehow ${name} was the only one who didn't see this coming. Bold of you to even submit a prediction.`,
+    `${name}, this one was so obvious even a coin flip would've beaten you. And yet.`,
+  ];
+  return templates[Math.floor(Math.random() * templates.length)];
+}
+
 function DashboardTab({ user, leagueId, setTab, refresh }) {
   const leagues = storage.get("sc_leagues") || {};
   const league = leagues[leagueId];
@@ -2042,6 +2075,79 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
     computeUpsets();
   }, [leagueId, Object.keys(results).length]);
 
+  // ── Highlight: everyone got the outcome right except one person ───────────
+  const [loneMissRoast, setLoneMissRoast] = useState(null);
+  useEffect(() => {
+    if (!leagueId || !league) return;
+
+    const computeLoneMiss = async () => {
+      const seenKey = `sc_seen_lonemiss_${leagueId}`;
+      const seenIds = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
+      const newRoasts = [];
+      const members = league.members || [];
+      const minPredictors = 3; // need at least 3 total predictors for this to mean anything
+
+      // Always fetch fresh user data — partial cache caused the "Someone"
+      // username bug earlier, so don't risk repeating that here.
+      const users = await fsGetAllUsers();
+      _cache["sc_users"] = users;
+
+      for (const fid of Object.keys(results)) {
+        const result = results[fid];
+        if (!result || result.homeGoals == null || result.awayGoals == null) continue;
+
+        const fixture = WC2026_FIXTURES.find(f => f.id === fid);
+        if (!fixture) continue;
+
+        const realOutcome = result.homeGoals > result.awayGoals ? "H"
+          : result.awayGoals > result.homeGoals ? "A" : "D";
+
+        let predictorCount = 0;
+        let missedUid = null;
+        let missedCount = 0;
+
+        for (const memberUid of members) {
+          const memberPred = ((allPreds[memberUid] || {})[leagueId] || {})[fid];
+          if (!memberPred || memberPred.homeGoals == null) continue;
+          predictorCount++;
+          const predOutcome = memberPred.homeGoals > memberPred.awayGoals ? "H"
+            : memberPred.awayGoals > memberPred.homeGoals ? "A" : "D";
+          if (predOutcome !== realOutcome) {
+            missedCount++;
+            missedUid = memberUid;
+          }
+        }
+
+        // Exactly one person missed it, everyone else (3+) got it right
+        if (predictorCount < minPredictors) continue;
+        if (missedCount !== 1) continue;
+
+        const roastId = fid; // one roast per fixture, regardless of who missed
+        if (seenIds.has(roastId)) continue;
+
+        newRoasts.push({
+          id: roastId,
+          fixture,
+          score: `${result.homeGoals}-${result.awayGoals}`,
+          username: users[missedUid]?.username || "Someone",
+          isYou: missedUid === user.uid,
+          predictorCount,
+          leagueName: league.name,
+        });
+      }
+
+      if (newRoasts.length > 0) {
+        const chosen = newRoasts[0];
+        const roastText = generateLoneMissRoast(chosen.isYou ? "You" : chosen.username, chosen.predictorCount);
+        setLoneMissRoast({ ...chosen, roastText });
+        const allSeen = [...seenIds, ...newRoasts.map(r => r.id)];
+        localStorage.setItem(seenKey, JSON.stringify(allSeen));
+      }
+    };
+
+    computeLoneMiss();
+  }, [leagueId, Object.keys(results).length]);
+
   // Stats
   const totalPreds = Object.keys(myPreds).filter(k => k !== "tournament_winner" && myPreds[k]?.homeGoals != null).length;
   const scoredFixtures = WC2026_FIXTURES.filter(f => results[f.id] != null);
@@ -2113,6 +2219,24 @@ function DashboardTab({ user, leagueId, setTab, refresh }) {
             </div>
           </div>
           <button className="highlight-pick-dismiss" onClick={() => setUpsetPick(null)}>✕</button>
+        </div>
+      )}
+
+      {/* Lone miss roast — everyone got it right except one person */}
+      {loneMissRoast && (
+        <div className="lonemiss-banner">
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span className="lonemiss-banner-icon">🤡</span>
+            <div>
+              <div className="lonemiss-banner-text">
+                {loneMissRoast.roastText}
+              </div>
+              <div className="lonemiss-banner-sub">
+                {loneMissRoast.leagueName} · {loneMissRoast.fixture.home} {loneMissRoast.score} {loneMissRoast.fixture.away}
+              </div>
+            </div>
+          </div>
+          <button className="highlight-pick-dismiss" onClick={() => setLoneMissRoast(null)}>✕</button>
         </div>
       )}
 
@@ -3172,41 +3296,6 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
   const [expandedId, setExpandedId] = useState(selectedLeague || null);
   const [expandedTab, setExpandedTab] = useState("standings");
   const [leaveConfirm, setLeaveConfirm] = useState(null);
-  const [roastText, setRoastText] = useState(null);
-  const [lastRoastIdx, setLastRoastIdx] = useState(-1);
-
-  const generateRoast = (lastPlaceEntry, secondLastPoints) => {
-    const name = lastPlaceEntry.username;
-    const pts = lastPlaceEntry.points;
-    const gap = secondLastPoints != null ? secondLastPoints - lastPlaceEntry.points : null;
-
-    const templates = [
-      `${name}, dead last with ${pts} points. Even a coin flip would've done better.`,
-      `${gap != null ? `${gap} points behind 2nd-to-last. ${name}, that's not a gap, that's a canyon.` : `${name} is rock bottom. Football clearly isn't your sport — maybe try competitive napping.`}`,
-      `${name} predicting scores is like watching someone play darts with their eyes closed. In the dark. Underwater.`,
-      `Last place, ${pts} points. ${name}, did you even watch the matches or just vibe-guess every score?`,
-      `${name} is so far behind, the other players forgot they're even in a competition with you.`,
-      `Congratulations ${name}, you've achieved something special: being statistically worse than random guessing.`,
-      `${name}'s predictions have the accuracy of a broken clock — except the clock is right twice a day, and you're not.`,
-      `Bottom of the table, ${pts} points. ${name}, maybe football just isn't for you. Have you tried chess?`,
-      `${name}, your World Cup knowledge peaked at "the ball is round." Last place confirmed.`,
-      `Somewhere, a goat is making better predictions than ${name}. With ${pts} points, that's not even an insult, it's a fact.`,
-      `${name} really said "trust me" before every single wrong prediction. Bold strategy.`,
-      `Last place with ${pts} points — ${name}, even your bracket has given up on you.`,
-      `${name}, watching you predict scores is like watching someone try to parallel park for the first time. Painful.`,
-      `${pts} points. ${name}, at this point we're rooting for you out of pity, not respect.`,
-      `${name} is in last place and somehow still confident. That confidence is doing a lot of heavy lifting.`,
-    ];
-
-    // Pick a different one than last time if possible
-    let idx;
-    do {
-      idx = Math.floor(Math.random() * templates.length);
-    } while (templates.length > 1 && idx === lastRoastIdx);
-
-    setLastRoastIdx(idx);
-    setRoastText(templates[idx]);
-  };
 
   // Refresh users cache when this tab mounts so usernames always show correctly
   useEffect(() => {
@@ -3364,43 +3453,6 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                             </tbody>
                           </table>
                         )
-                    )}
-
-                    {/* Roast last place button — only with 4+ players */}
-                    {expandedTab === "standings" && lb.length >= 4 && (
-                      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => generateRoast(lb[lb.length - 1], lb[lb.length - 2]?.points)}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 6,
-                            background: "rgba(244,63,94,0.08)",
-                            border: "1px solid rgba(244,63,94,0.3)",
-                            color: "var(--accent2)",
-                          }}
-                        >
-                          🔥 Roast Last Place
-                        </button>
-                        {roastText && (
-                          <div style={{
-                            marginTop: 10, padding: "12px 14px",
-                            background: "var(--surface2)", borderRadius: "var(--r2)",
-                            border: "1px solid var(--border)", fontSize: 13,
-                            fontStyle: "italic", color: "var(--text)",
-                          }}>
-                            "{roastText}"
-                            <div style={{ marginTop: 8 }}>
-                              <button
-                                className="btn btn-ghost btn-sm"
-                                style={{ fontSize: 11, padding: "2px 8px" }}
-                                onClick={() => generateRoast(lb[lb.length - 1], lb[lb.length - 2]?.points)}
-                              >
-                                🔄 Another one
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
                     )}
 
                     {expandedTab === "info" && (
