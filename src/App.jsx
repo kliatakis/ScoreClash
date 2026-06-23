@@ -191,6 +191,7 @@ function calcLeaderboard(leagueId, withMovement = false) {
     const user = users[uid];
     let pts = 0;
     let exact = 0, correct = 0, total = 0;
+    let highestExactGoals = 0; // total goals (home+away) of their best exact-score prediction
     WC2026_FIXTURES.forEach(f => {
       const pred = (predictions[uid] || {})[leagueId]?.[f.id];
       const result = results[f.id];
@@ -198,7 +199,11 @@ function calcLeaderboard(leagueId, withMovement = false) {
       pts += s;
       if (result != null && pred?.homeGoals != null) {
         total++;
-        if (s === scoring.exactPoints) exact++;
+        if (s === scoring.exactPoints) {
+          exact++;
+          const goalTotal = Number(result.homeGoals) + Number(result.awayGoals);
+          if (goalTotal > highestExactGoals) highestExactGoals = goalTotal;
+        }
         else if (s === scoring.outcomePoints) correct++;
       }
     });
@@ -208,8 +213,8 @@ function calcLeaderboard(leagueId, withMovement = false) {
       const correctWinner = twPred && twResult && twPred === twResult ? 1 : 0;
       if (correctWinner) pts += scoring.winnerPoints;
     }
-    return { uid, username: user?.username || _cache["sc_users"]?.[uid]?.username || uid, points: pts, exact, correct, total, correctWinner: (predictions[uid] || {})[leagueId]?.tournament_winner && results["tournament_winner"] && (predictions[uid] || {})[leagueId]?.tournament_winner === results["tournament_winner"] ? 1 : 0 };
-  }).sort((a, b) => b.points - a.points || b.exact - a.exact || b.correctWinner - a.correctWinner);
+    return { uid, username: user?.username || _cache["sc_users"]?.[uid]?.username || uid, points: pts, exact, correct, total, highestExactGoals, correctWinner: (predictions[uid] || {})[leagueId]?.tournament_winner && results["tournament_winner"] && (predictions[uid] || {})[leagueId]?.tournament_winner === results["tournament_winner"] ? 1 : 0 };
+  }).sort((a, b) => b.points - a.points || b.exact - a.exact || b.correctWinner - a.correctWinner || b.highestExactGoals - a.highestExactGoals);
 
   if (!withMovement) return entries;
 
@@ -3474,7 +3479,14 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                               {league.settings?.tournamentWinnerBonus && (
                                 <div>🏆 <strong>Correct tournament winner</strong> = <span style={{ color: "var(--gold)" }}>{sc.winnerPoints} pts</span></div>
                               )}
-                              <div style={{ marginTop: 8, fontSize: 12, color: "var(--muted)" }}>Tiebreaker: most exact scores wins.</div>
+                              <div style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>
+                                <strong style={{ color: "var(--text)" }}>Tiebreakers</strong> (in order):
+                                <div style={{ marginTop: 4, paddingLeft: 4 }}>
+                                  1. Most exact scores<br />
+                                  {league.settings?.tournamentWinnerBonus && <>2. Correct tournament winner<br /></>}
+                                  {league.settings?.tournamentWinnerBonus ? "3" : "2"}. Highest-scoring match predicted exactly
+                                </div>
+                              </div>
                             </div>
                           );
                         })()}
