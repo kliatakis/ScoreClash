@@ -455,6 +455,7 @@ const PRESET_AVATARS = [
   { id: "a18", emoji: "👑", label: "Crown" },
   { id: "a19", emoji: "🚀", label: "Rocket" },
   { id: "a21", emoji: "🐐", label: "Goat" },
+  { id: "a22", emoji: "🪳", label: "Cockroach" },
 ];
 
 // Get avatar for a user — returns { type: 'emoji'|'image', value }
