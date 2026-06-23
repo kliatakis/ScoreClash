@@ -192,6 +192,7 @@ function calcLeaderboard(leagueId, withMovement = false) {
     let pts = 0;
     let exact = 0, correct = 0, total = 0;
     let highestExactGoals = 0; // total goals (home+away) of their best exact-score prediction
+    let highestExactMatch = null; // { fixture, score } for that best prediction
     WC2026_FIXTURES.forEach(f => {
       const pred = (predictions[uid] || {})[leagueId]?.[f.id];
       const result = results[f.id];
@@ -202,7 +203,10 @@ function calcLeaderboard(leagueId, withMovement = false) {
         if (s === scoring.exactPoints) {
           exact++;
           const goalTotal = Number(result.homeGoals) + Number(result.awayGoals);
-          if (goalTotal > highestExactGoals) highestExactGoals = goalTotal;
+          if (goalTotal > highestExactGoals) {
+            highestExactGoals = goalTotal;
+            highestExactMatch = { fixture: f, homeGoals: result.homeGoals, awayGoals: result.awayGoals };
+          }
         }
         else if (s === scoring.outcomePoints) correct++;
       }
@@ -213,8 +217,20 @@ function calcLeaderboard(leagueId, withMovement = false) {
       const correctWinner = twPred && twResult && twPred === twResult ? 1 : 0;
       if (correctWinner) pts += scoring.winnerPoints;
     }
-    return { uid, username: user?.username || _cache["sc_users"]?.[uid]?.username || uid, points: pts, exact, correct, total, highestExactGoals, correctWinner: (predictions[uid] || {})[leagueId]?.tournament_winner && results["tournament_winner"] && (predictions[uid] || {})[leagueId]?.tournament_winner === results["tournament_winner"] ? 1 : 0 };
+    return { uid, username: user?.username || _cache["sc_users"]?.[uid]?.username || uid, points: pts, exact, correct, total, highestExactGoals, highestExactMatch, correctWinner: (predictions[uid] || {})[leagueId]?.tournament_winner && results["tournament_winner"] && (predictions[uid] || {})[leagueId]?.tournament_winner === results["tournament_winner"] ? 1 : 0 };
   }).sort((a, b) => b.points - a.points || b.exact - a.exact || b.correctWinner - a.correctWinner || b.highestExactGoals - a.highestExactGoals);
+
+  // ── Determine which tiebreaker (if any) separated each entry from the one above ──
+  entries.forEach((entry, i) => {
+    if (i === 0) { entry.tiebreakerUsed = null; return; }
+    const prev = entries[i - 1];
+    if (entry.points !== prev.points) { entry.tiebreakerUsed = null; return; }
+    // Points are tied — figure out which level actually broke it
+    if (entry.exact !== prev.exact) { entry.tiebreakerUsed = "exact"; return; }
+    if (entry.correctWinner !== prev.correctWinner) { entry.tiebreakerUsed = "winner"; return; }
+    if (entry.highestExactGoals !== prev.highestExactGoals) { entry.tiebreakerUsed = "goals"; return; }
+    entry.tiebreakerUsed = "tied"; // fully tied, no tiebreaker resolved it
+  });
 
   if (!withMovement) return entries;
 
@@ -1231,6 +1247,11 @@ const css = (dark = true) => `
   .lb-movement.down { color: var(--accent2); }
   .lb-movement.same { color: var(--muted); }
   .lb-movement.new  { color: var(--accent); font-size: 10px; }
+  .tiebreak-info-icon {
+    font-size: 12px; color: var(--muted); cursor: help;
+    flex-shrink: 0; opacity: 0.7; transition: opacity 0.15s;
+  }
+  .tiebreak-info-icon:hover { opacity: 1; color: var(--accent); }
 
   /* LEAGUES */
   .league-item {
@@ -3443,6 +3464,28 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                         <Avatar uid={entry.uid} size={28} username={entry.username} />
                                         <span>{entry.uid === user.uid ? "⭐ " : ""}{entry.username}</span>
+                                        {entry.tiebreakerUsed && entry.tiebreakerUsed !== "tied" && (
+                                          <span
+                                            className="tiebreak-info-icon"
+                                            title={
+                                              entry.tiebreakerUsed === "exact"
+                                                ? `Tiebreaker: more exact scores than ${lb[i - 1].username} (${entry.exact} vs ${lb[i - 1].exact})`
+                                                : entry.tiebreakerUsed === "winner"
+                                                ? `Tiebreaker: correctly predicted the tournament winner`
+                                                : `Tiebreaker: nailed ${entry.highestExactMatch?.fixture.home} ${entry.highestExactMatch?.homeGoals}-${entry.highestExactMatch?.awayGoals} ${entry.highestExactMatch?.fixture.away} exactly (${entry.highestExactGoals} goals) — beats their best: ${lb[i - 1].highestExactMatch?.fixture.home} ${lb[i - 1].highestExactMatch?.homeGoals}-${lb[i - 1].highestExactMatch?.awayGoals} ${lb[i - 1].highestExactMatch?.fixture.away} (${lb[i - 1].highestExactGoals} goals)`
+                                            }
+                                          >
+                                            ⓘ
+                                          </span>
+                                        )}
+                                        {entry.tiebreakerUsed === "tied" && (
+                                          <span
+                                            className="tiebreak-info-icon"
+                                            title="Fully tied on points, exact scores, and all tiebreakers — order shown is arbitrary"
+                                          >
+                                            ⓘ
+                                          </span>
+                                        )}
                                       </div>
                                     </td>
                                     <td className="lb-acc">{entry.exact}</td>
