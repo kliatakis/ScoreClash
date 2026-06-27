@@ -3469,10 +3469,10 @@ function LeaguesTab({ user, myLeagues, selectedLeague, onSetLeague, onOpenModal,
                                             className="tiebreak-info-icon"
                                             title={
                                               entry.tiebreakerUsed === "exact"
-                                                ? `Tiebreaker: more exact scores than ${lb[i - 1].username} (${entry.exact} vs ${lb[i - 1].exact})`
+                                                ? `${entry.username} loses the tiebreaker because they have fewer exact scores (${entry.exact}) than ${lb[i - 1].username} (${lb[i - 1].exact})`
                                                 : entry.tiebreakerUsed === "winner"
-                                                ? `Tiebreaker: correctly predicted the tournament winner`
-                                                : `Tiebreaker: nailed ${entry.highestExactMatch?.fixture.home} ${entry.highestExactMatch?.homeGoals}-${entry.highestExactMatch?.awayGoals} ${entry.highestExactMatch?.fixture.away} exactly (${entry.highestExactGoals} goals) — beats their best: ${lb[i - 1].highestExactMatch?.fixture.home} ${lb[i - 1].highestExactMatch?.homeGoals}-${lb[i - 1].highestExactMatch?.awayGoals} ${lb[i - 1].highestExactMatch?.fixture.away} (${lb[i - 1].highestExactGoals} goals)`
+                                                ? `${entry.username} loses the tiebreaker because ${lb[i - 1].username} correctly predicted the tournament winner and they did not`
+                                                : `${entry.username} loses the tiebreaker because their largest exact-score prediction of ${entry.highestExactMatch?.homeGoals}-${entry.highestExactMatch?.awayGoals} in ${entry.highestExactMatch?.fixture.home} vs ${entry.highestExactMatch?.fixture.away} (${entry.highestExactGoals} goals) is worse than ${lb[i - 1].username}'s prediction of ${lb[i - 1].highestExactMatch?.homeGoals}-${lb[i - 1].highestExactMatch?.awayGoals} in ${lb[i - 1].highestExactMatch?.fixture.home} vs ${lb[i - 1].highestExactMatch?.fixture.away} (${lb[i - 1].highestExactGoals} goals)`
                                             }
                                           >
                                             ⓘ
